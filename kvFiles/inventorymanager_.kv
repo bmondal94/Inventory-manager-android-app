@@ -1,0 +1,418 @@
+###: import random random
+
+<AllItemWindow>:
+	name: "all_items"
+	on_pre_enter: root.ItemBox()
+	BoxLayout:
+		orientation:'vertical'
+		id: item_whole_box
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0,0,1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: 'Main Store'
+			size_hint: (1, 0.1)
+		ScrollView:
+			id: item_scroll
+			size_hint: (1, 0.7)
+			canvas.before:
+				Color:
+					rgba: 1,0,1,0.5
+				Rectangle:
+					pos: self.pos
+					size: self.size
+		BoxLayout:
+			orientation: 'horizontal'			
+			size_hint_y: 0.1
+			canvas.before:
+				Color:
+					rgba: 0,0,1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			Label:
+				text: 'Item:'
+			Button:
+				text: 'Add'
+				on_press: root.AddItemBtn()
+			Button:
+				text: 'Update'
+				on_press: root.DetailsUpdateScreen()
+			Button:
+				text: 'Delete'
+				on_press: root.DeleteItemScreen()
+
+<ItemBoxTemplate>:
+	orientation: 'horizontal'
+	spacing: 10
+	size_hint_y: None
+	#padding: [0,0.1,0,0.1]
+	canvas.before:
+		Color:
+			rgba: 0,0,1,0.5
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	Image:
+		id: image
+		source: 'imgs/test.jpg'
+		size_hint_x: 0.33 
+		size: self.texture_size
+		
+	BoxLayout:
+		orientation: 'vertical'
+		spacing: 10
+		#size: image.size
+		Label:
+			id: item_name
+		BoxLayout:
+			orientation: 'horizontal'
+			spacing: 10
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'ID:'
+				Label:
+					id: item_id
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Count:'
+				Label:
+					id: item_number
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Cost:'
+				Label:
+					id: item_cost
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 1
+			Button:
+				id: add_item_count
+				text: '+'
+				on_press: root.buttonAddClicked(item_id.text, NumberOfItemsAdd.text)
+			TextInput:
+				id: NumberOfItemsAdd
+				#halign: 'center'
+				#valign: 'middle'
+				text: '0'
+			Button:
+				id: delete_item_count
+				text: '-'
+				on_press: root.buttonDeleteClicked(item_id.text, NumberOfItemsDelete.text)
+			TextInput:
+				id: NumberOfItemsDelete
+				#halign: 'center'
+				#valign: 'middle'
+				text: '0'
+
+<AddItemWindow>:
+	name: "new_item_add"
+
+	item_id: item_id
+	item_namee: item_name
+	item_number: item_numbers
+	item_cost: item_cost
+	image: image_path
+
+	BoxLayout:
+		orientation: 'vertical'
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0,0,1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: 'Add new items'
+			size_hint: (1, 0.2)
+		BoxLayout:
+			orientation:'vertical'
+			canvas.before:
+				Color:
+					rgba: 0.4,0.4,0.7,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item name*'
+
+				TextInput:
+					id: item_name
+					text: 'test'
+					#multiline: False
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item ID*'
+
+				TextInput:
+					id: item_id
+					text: '1'
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item counts'
+
+				TextInput:
+					id: item_numbers
+					text: '0'
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item cost (/per item)'
+
+				TextInput:
+					id: item_cost
+					text: '0'
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Image'
+				BoxLayout:
+					orientation: 'horizontal'
+					TextInput:
+						id: image_path
+						size_hint_x: 0.25
+						text: 'imgs/test.jpg'
+					Button:
+						text: 'Take picture'	
+						size_hint_x: 0.25
+						on_press: root.CameraClick()
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0.4,0.7,0.4,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: '* is mandatory. \nThe default item number is 0. \nThe default item cost is 0. \nThe default image path is test.jpg .\n Multiple item can be added.'
+			#size_hint: None, None
+			size: self.texture_size
+
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0.5,0,0.1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: 'Items added: '
+			size_hint: (None, None)
+			size: self.texture_size
+
+		ScrollView:
+			id: add_item_label
+			canvas.before:
+				Color:
+					rgba: 0.4,0.7,0.5,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			BoxLayout:
+				id: add_item_label_box
+				orientation: 'vertical'
+				size_hint_y: None
+				height: self.minimum_height
+		Button:
+			text: 'Add to bucket'
+			size_hint_y: 0.2
+			on_release: if root.CheckItemsEligibility(): root.AddItemWidget()
+
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.2
+			Button:
+				text: 'Save'
+				on_release: 
+					root.Submit()
+			Button:
+				text: 'Quit'
+				on_release:
+					root.manager.transition.direction = "left"
+					root.ReturnBack()
+
+<TakePicture>:
+	name: 'take_picture'
+	BoxLayout:
+		orientation: 'vertical'
+		#Camera:
+		#	id: camera_img
+		#	resolution: (640, 480)
+		#	play: False
+		ToggleButton:
+			text: 'play'
+			#on_press: camera_img.play = not camera_img.play
+			size_hint_y: 0.1 
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.1 
+			Button:
+				text: 'Capture'
+				#on_press: camera_img.play = False
+			Button:
+				text: 'Save'
+				#on_press: root.SaveImage()
+			Button:
+				text: 'Quit'
+				on_press: root.manager.current = 'new_item_add'
+			
+
+<AddItemWidgetLabel>:
+	id: add_item_widget_label
+	size_hint: (None, None)
+	size: self.texture_size
+
+<UpdateItemDetails>:
+	name: 'details_update'
+	update_item_id: update_item_id
+	action: 'update'
+	BoxLayout:
+		orientation: 'vertical'
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0,0,1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: 'Update item window'
+			size_hint_y: 0.1
+		BoxLayout:
+			size_hint_y: 0.1
+			orientation: 'horizontal'
+			spacing: 5
+			canvas.before:
+				Color:
+					rgba: 1,0,0,0.5
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item ID:'
+					size: self.texture_size
+				
+				TextInput:
+					id: update_item_id
+
+			Button:
+				text: 'Show'
+				size_hint_x: 0.2
+				on_press:
+					if root.get_item_details(): root.ShowItemDetails(root.action) 
+			Button:
+				text: 'Back'
+				size_hint_x: 0.2
+				on_press: root.ReturnBack()
+			
+		ScrollView:
+			id: update_item_scroll
+			size_hint: (1, 0.8)
+
+<UpdateItemBoxTemplate>:
+	cols: 1
+	spacing: 2
+	size_hint_y: 0.9 #None
+	#minimum_height: self.height
+	#id: update_box_template	
+	canvas.before:
+		Color:
+			rgba: 0.4,0.3,0.8,0.5
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	Label:
+		text: ''
+	Image:
+		id: update_image
+		source: 'imgs/test.jpg'
+		size: self.size 
+	
+	Label:
+		id: update_item_name 
+	BoxLayout:
+		orientation: 'horizontal'
+		spacing: 10
+		BoxLayout:
+			orientation: 'horizontal'
+			Label:
+				text: 'ID: '
+			Label:
+				id: update_item_id
+			Label:
+				text: 'Count: '
+			Label:
+				id: update_item_number
+			Label:
+				text: 'Cost: ' 
+			Label:
+				id: update_item_cost
+<UpdateItemProperties>:
+	orientation: 'vertical'
+	spacing: 10
+	canvas.before:
+		Color:
+			rgba: 0.4,0.4,0.6,1
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	BoxLayout:
+		orientation: 'horizontal'
+		Label:
+			text: 'Current cost: ' 
+		Label:
+			id: update_item_cost_current
+	BoxLayout:
+		orientation: 'horizontal'
+		Label:
+			text: 'New cost: ' 
+		TextInput:
+			id: update_item_cost_new
+	BoxLayout:
+		orientation: 'horizontal'	
+		#size_hint_y: None
+		Button:
+			text: 'Save'
+			on_press: 
+				root.UpdateCostDataBase(update_item_cost_new.text)
+				root.ReturnBack()
+		Button:
+			text: 'Quit'
+			on_press: root.ReturnBack()
+
+<DeleteItem>:
+	orientation: 'vertical'
+	BoxLayout:
+		orientation: 'vertical'	
+		#size_hint_y: None
+		canvas.before:
+			Color:
+				rgba: 0.4,0.5,1,1
+			Rectangle:
+				pos: self.pos
+				size: self.size
+		Label:
+			text: 'Are you sure you want to delete the item?'
+			size: self.texture_size
+		BoxLayout:
+			orientation: 'horizontal'
+			Button:
+				text: 'Confirm'
+				on_press: if root.DeleteItemDataBase(): root.ReturnBack()
+			Button:
+				text: 'Quit'
+				on_press: root.ReturnBack()

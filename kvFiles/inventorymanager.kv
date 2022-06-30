@@ -1,0 +1,45 @@
+<AllItemWindow>:
+	name: "all_items"
+	on_pre_enter: root.ItemBox()
+	BoxLayout:
+		orientation:'vertical'
+		id: item_whole_box
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0,0,1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: 'Main Store'
+			size_hint: (1, 0.1)
+		ScrollView:
+			id: item_scroll
+			size_hint: (1, 0.7)
+			canvas.before:
+				Color:
+					rgba: 1,0,1,0.5
+				Rectangle:
+					pos: self.pos
+					size: self.size
+		BoxLayout:
+			orientation: 'horizontal'			
+			size_hint_y: 0.1
+			spacing: 5
+			canvas.before:
+				Color:
+					rgba: 0,0,1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			Label:
+				text: 'Item:'
+			Button:
+				text: 'Add'
+				on_press: root.AddItemBtn()
+			Button:
+				text: 'Update'
+				on_press: root.DetailsUpdateScreen()
+			Button:
+				text: 'Delete'
+				on_press: root.DeleteItemScreen()

@@ -1,0 +1,48 @@
+<UpdateItemDetails>:
+	name: 'details_update'
+	update_item_id: update_item_id
+	action: 'update'
+	BoxLayout:
+		orientation: 'vertical'
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0,0,1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: 'Update item window'
+			size_hint_y: 0.1
+		BoxLayout:
+			size_hint_y: 0.1
+			orientation: 'horizontal'
+			spacing: 5
+			canvas.before:
+				Color:
+					rgba: 1,0,0,0.5
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item ID:'
+					size: self.texture_size
+				
+				TextInput:
+					id: update_item_id
+
+			Button:
+				text: 'Show'
+				size_hint_x: 0.2
+				on_press:
+					if root.get_item_details(): root.ShowItemDetails(root.action) 
+			Button:
+				text: 'Back'
+				size_hint_x: 0.2
+				on_press: root.ReturnBack()
+			
+		ScrollView:
+			id: update_item_scroll
+			size_hint: (1, 0.8)
+

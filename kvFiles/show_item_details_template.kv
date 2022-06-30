@@ -1,0 +1,38 @@
+<UpdateItemBoxTemplate>:
+	cols: 1
+	spacing: 2
+	size_hint_y: 0.9 #None
+	#minimum_height: self.height
+	#id: update_box_template	
+	canvas.before:
+		Color:
+			rgba: 0.4,0.3,0.8,0.5
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	Label:
+		text: ''
+	Image:
+		id: update_image
+		source: 'imgs/test.jpg'
+		size: self.size 
+	
+	Label:
+		id: update_item_name 
+	BoxLayout:
+		orientation: 'horizontal'
+		spacing: 10
+		BoxLayout:
+			orientation: 'horizontal'
+			Label:
+				text: 'ID: '
+			Label:
+				id: update_item_id
+			Label:
+				text: 'Count: '
+			Label:
+				id: update_item_number
+			Label:
+				text: 'Cost: ' 
+			Label:
+				id: update_item_cost

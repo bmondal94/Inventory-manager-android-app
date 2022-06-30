@@ -1,0 +1,25 @@
+<TakePicture>:
+	name: 'take_picture'
+	BoxLayout:
+		orientation: 'vertical'
+		Camera:
+			id: camera_img
+			resolution: (640, 480)
+			play: False
+		ToggleButton:
+			text: 'play'
+			on_press: camera_img.play = not camera_img.play
+			size_hint_y: 0.1 
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.1 
+			Button:
+				text: 'Capture'
+				on_press: camera_img.play = False
+			Button:
+				text: 'Save'
+				on_press: root.SaveImage()
+			Button:
+				text: 'Quit'
+				on_press: root.manager.current = 'new_item_add'
+			

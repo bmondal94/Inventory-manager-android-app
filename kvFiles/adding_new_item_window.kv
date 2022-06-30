@@ -1,0 +1,137 @@
+<AddItemWindow>:
+	name: "new_item_add"
+
+	item_id: item_id
+	item_namee: item_name
+	item_number: item_numbers
+	item_cost: item_cost
+	image: image_path
+
+	BoxLayout:
+		orientation: 'vertical'
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0,0,1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: 'Add new items'
+			size_hint: (1, 0.2)
+		BoxLayout:
+			orientation:'vertical'
+			canvas.before:
+				Color:
+					rgba: 0.4,0.4,0.7,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item name*'
+
+				TextInput:
+					id: item_name
+					text: 'test'
+					#multiline: False
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item ID*'
+
+				TextInput:
+					id: item_id
+					text: '1'
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item counts'
+
+				TextInput:
+					id: item_numbers
+					text: '0'
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Item cost (/per item)'
+
+				TextInput:
+					id: item_cost
+					text: '0'
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Image'
+				BoxLayout:
+					orientation: 'horizontal'
+					TextInput:
+						id: image_path
+						size_hint_x: 0.25
+						text: 'imgs/test.jpg'
+					Button:
+						text: 'Take picture'	
+						size_hint_x: 0.25
+						on_press: root.CameraClick()
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0.4,0.7,0.4,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: '* is mandatory. \nThe default item number is 0. \nThe default item cost is 0. \nThe default image path is test.jpg .\n Multiple item can be added.'
+			#size_hint: None, None
+			size: self.texture_size
+
+		Label:
+			canvas.before:
+				Color:
+					rgba: 0.5,0,0.1,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			text: 'Items added: '
+			size_hint: (None, None)
+			size: self.texture_size
+
+		ScrollView:
+			id: add_item_label
+			canvas.before:
+				Color:
+					rgba: 0.4,0.7,0.5,1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			BoxLayout:
+				id: add_item_label_box
+				orientation: 'vertical'
+				size_hint_y: None
+				height: self.minimum_height
+		Button:
+			text: 'Add to bucket'
+			size_hint_y: 0.2
+			on_release: if root.CheckItemsEligibility(): root.AddItemWidget()
+
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.2
+			Button:
+				text: 'Save'
+				on_release: 
+					root.Submit()
+			Button:
+				text: 'Quit'
+				on_release:
+					root.manager.transition.direction = "left"
+					root.ReturnBack()
+
+<AddItemWidgetLabel>:
+	id: add_item_widget_label
+	size_hint: (None, None)
+	size: self.texture_size
+

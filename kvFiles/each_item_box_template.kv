@@ -1,0 +1,63 @@
+<ItemBoxTemplate>:
+	orientation: 'horizontal'
+	spacing: 5
+	size_hint_y: None
+	height: '100dp'	
+	#padding: [0,0.1,0,0.1]
+	canvas.before:
+		Color:
+			rgba: 0,0,1,0.5
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	Image:
+		id: image
+		source: 'imgs/test.jpg'
+		size_hint_x: 0.33 
+		allow_stretch: True
+		size: self.texture_size
+		
+	BoxLayout:
+		orientation: 'vertical'
+		spacing: 10
+		Label:
+			id: item_name
+		BoxLayout:
+			orientation: 'horizontal'
+			spacing: 10
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'ID:'
+				Label:
+					id: item_id
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Count:'
+				Label:
+					id: item_number
+
+			BoxLayout:
+				orientation: 'horizontal'
+				Label:
+					text: 'Cost:'
+				Label:
+					id: item_cost
+		BoxLayout:
+			orientation: 'horizontal'
+			Button:
+				id: add_item_count
+				text: '+'
+				on_press: root.buttonAddClicked(item_id.text, NumberOfItemsAdd.text)
+			TextInput:
+				id: NumberOfItemsAdd
+				text: '0'
+			Button:
+				id: delete_item_count
+				text: '-'
+				on_press: root.buttonDeleteClicked(item_id.text, NumberOfItemsDelete.text)
+			TextInput:
+				id: NumberOfItemsDelete
+				text: '0'
+

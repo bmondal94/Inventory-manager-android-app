@@ -1,0 +1,31 @@
+<UpdateItemProperties>:
+	orientation: 'vertical'
+	spacing: 10
+	canvas.before:
+		Color:
+			rgba: 0.4,0.4,0.6,1
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	BoxLayout:
+		orientation: 'horizontal'
+		Label:
+			text: 'Current cost: ' 
+		Label:
+			id: update_item_cost_current
+	BoxLayout:
+		orientation: 'horizontal'
+		Label:
+			text: 'New cost: ' 
+		TextInput:
+			id: update_item_cost_new
+	BoxLayout:
+		orientation: 'horizontal'	
+		#size_hint_y: None
+		spacing: 5
+		Button:
+			text: 'Save'
+			on_press: root.UpdateCostDataBase(update_item_cost_new.text) 
+		Button:
+			text: 'Quit'
+			on_press: root.ReturnBack()
