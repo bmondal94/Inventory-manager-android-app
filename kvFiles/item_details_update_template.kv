@@ -1,31 +1,55 @@
 <UpdateItemProperties>:
 	orientation: 'vertical'
 	spacing: 10
-	canvas.before:
-		Color:
-			rgba: 0.4,0.4,0.6,1
-		Rectangle:
-			pos: self.pos
-			size: self.size
+	#size_hint_y: None
 	BoxLayout:
-		orientation: 'horizontal'
-		Label:
-			text: 'Current cost: ' 
-		Label:
-			id: update_item_cost_current
-	BoxLayout:
-		orientation: 'horizontal'
-		Label:
-			text: 'New cost: ' 
-		TextInput:
-			id: update_item_cost_new
+		canvas.before:
+			Color:
+				rgba: 0.1,0.4,0.5,0.8
+			RoundedRectangle:
+				pos: self.pos
+				size: self.size
+		orientation: 'vertical'
+		padding: 5 
+		spacing: 10
+		#size_hint_y: None
+		BoxLayout:
+			orientation: 'horizontal'
+			Label:
+				text: 'New name: ' 
+			TextInput:
+				cursor_color: 0,0,0,1
+				id: update_item_name_new
+		BoxLayout:
+			orientation: 'horizontal'
+			Label:
+				text: 'New image: ' 
+			BoxLayout:
+				orientation: 'horizontal'
+				TextInput:
+					cursor_color: 0,0,0,1
+					id: image_path
+				Button:
+					id: camera_take_picture
+					text: 'Camera'
+					on_press: root.CameraClick()
+		BoxLayout:
+			orientation: 'horizontal'
+			Label:
+				text: 'New cost: ' 
+			TextInput:
+				cursor_color: 0,0,0,1
+				id: update_item_cost_new
 	BoxLayout:
 		orientation: 'horizontal'	
-		#size_hint_y: None
+		size_hint_y: 0.2
 		spacing: 5
 		Button:
 			text: 'Save'
-			on_press: root.UpdateCostDataBase(update_item_cost_new.text) 
+			on_press: if root.UpdateCostDataBase(update_item_cost_new.text): root.UpdateDataBase_for_Item(update_item_name_new.text, image_path.text)
+		Button:
+			text: 'Refresh'
+			on_press: root.RefreshBack()
 		Button:
 			text: 'Quit'
 			on_press: root.ReturnBack()

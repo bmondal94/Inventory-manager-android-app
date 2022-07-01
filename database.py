@@ -59,7 +59,14 @@ class DataBase:
             self.conn.executemany('''INSERT INTO ALLDATA VALUES (?, ?, ?, ?, ?)''', item_list )
         
         self.conn.close()
-        return 
+        return
+
+    def id_list(self):
+        self.conn = sq.connect(self.filename)
+        item_ids = self.conn.execute('''SELECT * FROM ALLDATA''').fetchall()
+        self.conn.close()
+        return sorted([id_[0] for id_ in item_ids])
+
 
     def get_item_properties(self, item_id):
         self.conn = sq.connect(self.filename)
@@ -68,10 +75,10 @@ class DataBase:
         self.conn.close()
         return Item_Properties
 
-    def UpdateNewCost(self, item_id, item_cost):
+    def UpdateNewItemDetails(self, partial_item):
         self.conn = sq.connect(self.filename)
         with self.conn:
-            self.conn.execute('''UPDATE ALLDATA SET COST = ? WHERE ID==?''', (item_cost,item_id))
+            self.conn.execute('''UPDATE ALLDATA SET NAME = ?, COST = ?, IMAGE = ? WHERE ID==?''', partial_item)
         self.conn.close()
         return 
 

@@ -29,7 +29,7 @@ import random
 import os
 import time
 
-Builder.load_file('kvFiles/inventorymanager.kv')
+Builder.load_file('kvFiles/main_store_window.kv')
 Builder.load_file('kvFiles/each_item_box_template.kv')
 
 Builder.load_file('kvFiles/adding_new_item_window.kv')
@@ -40,6 +40,7 @@ Builder.load_file('kvFiles/show_item_details_template.kv')
 
 Builder.load_file('kvFiles/delete_item_template.kv')
 
+NoCamera = True
 try:
     from android.permissions import request_permissions, Permission
     request_permissions([
@@ -49,8 +50,9 @@ try:
         Permission.READ_EXTERNAL_STORAGE,
     ])
     Builder.load_file('kvFiles/camera_window.kv')
+    NoCamera = False
 except:
-    NoCamera = True
+    pass
 
 DataBaseFile = 'StoreData.db'
 db = DataBase(DataBaseFile)
@@ -66,7 +68,7 @@ class ItemBoxTemplate(BoxLayout):
         self.ids.item_number.text = str(updated_item_numbers)
         
 
-class AllItemWindow(Screen):
+class MainStoreWindow(Screen):
     
     def ItemBox(self):
         self.items = db.ReturnAllItems()
@@ -97,23 +99,39 @@ class AllItemWindow(Screen):
     def DetailsUpdateScreen(self):
         self.RemoveItemTemplates()
         sm.get_screen('details_update').action = 'update'
+        sm.get_screen('details_update').ids.update_item_window_.text = 'Update item details'
         sm.current = 'details_update'
 
     def DeleteItemScreen(self):
         self.RemoveItemTemplates()
         sm.get_screen('details_update').action = 'DELETE'
+        sm.get_screen('details_update').ids.update_item_window_.text = 'Delete item'
         sm.current = 'details_update'
 
 class TakePicture(Screen):
+
+    def __init__(self, **kwargs):
+        super(TakePicture, self).__init__(**kwargs)
+        self.which_window = 'new_item_add'
+
     def SaveImage(self):
         timestr = time.strftime("%Y%m%d_%H%M%S")
         self.image_pathh = os.path.join(App.get_running_app().storage_path, "IMG_{}.jpg".format(timestr))
         iimg = self.ids.camera_img.export_as_image()
         iimg.save(self.image_pathh)
-        #self.ids.camera_img.export_to_png(self.image_pathh)
-        sm.get_screen('new_item_add').ids.image_path.text = self.image_pathh
-        sm.get_screen('new_item_add').ids.image_path.disabled = True
-        sm.current = 'new_item_add'
+        ##self.ids.camera_img.export_to_png(self.image_pathh)
+        self.NewImagePathUpdate(self.which_window)
+
+    def NewImagePathUpdate(self, which_window_):
+        all_ids_in_path = sm.get_screen(which_window_).ids
+        if which_window_ == 'details_update': all_ids_in_path = all_ids_in_path.update_item_box_template.ids
+        all_ids_in_path.image_path.text = self.image_pathh
+        all_ids_in_path.image_path.disabled = True
+        self.ReturnBack()
+
+    def ReturnBack(self):
+        self.ids.camera_img.play = not self.ids.camera_img.play
+        sm.current = self.which_window
 
 
 class AddItemWindow(Screen):
@@ -141,6 +159,16 @@ class AddItemWindow(Screen):
             self.ids.camera_take_picture.disabled = True
         else:
             sm.current = 'take_picture'
+
+    def CheckLength_name(self, max_length = 10):
+        if len(self.ids.item_name.text.strip()) > max_length:
+            WrongItemPopUp(f'Maximum {max_length} charachter allowed.')
+            self.ids.item_name.do_undo()
+
+    def CheckLength_id(self, max_length = 6):
+        if len(self.ids.item_id.text.strip()) > max_length:
+            WrongItemPopUp(f'Maximum {max_length} charachter allowed.')
+            self.ids.item_id.do_undo()
 
     def CheckItemsEligibility(self):
         item_id, item_name, item_numbers, item_cost, item_img_path = \
@@ -203,6 +231,7 @@ class AddItemWindow(Screen):
         self.item_cost.text = '0'
         self.image.text = 'imgs/test.jpg'
         self.image.disabled = False
+        self.ids.camera_take_picture.disabled = False
 
     def AddItemWidget(self):
         # https://stackoverflow.com/a/61707198
@@ -210,7 +239,7 @@ class AddItemWindow(Screen):
         scroll_height = self.ids.add_item_label.height
 
         label = AddItemWidgetLabel() 
-        label.text = self.check_new_item[1]
+        label.text = '        '+ self.check_new_item[0] + ':  ' + self.check_new_item[1] 
         self.ids.add_item_label_box.add_widget(label)
         
         if scroll_vp_height > scroll_height:
@@ -229,26 +258,58 @@ class AddItemWidgetLabel(Label):
 class UpdateItemBoxTemplate(GridLayout):
     pass
 
+
 class UpdateItemProperties(BoxLayout):
     def __init__(self, item):
         super(UpdateItemProperties, self).__init__()
-        self.itemm = item
+        self.updated_item = list(item)
+        self.save_and_back = False
 
     def UpdateCostDataBase(self, new_cost):
-        if new_cost and new_cost.strip(): 
+        if new_cost and new_cost.strip():
             try:
-                db.UpdateNewCost(self.itemm[0], float(new_cost))
-                self.ReturnBack()
+                self.updated_item[3] = float(new_cost)
+                self.save_and_back = True
             except:
                 WrongItemPopUp('Item cost should be number.')
                 self.ids.update_item_cost_new.text = ''
+                return 0
+        return 1
+
+    def UpdateDataBase_for_Item(self, new_name, new_image):
+        if new_name and new_name.strip(): 
+            self.updated_item[1] = new_name.strip() 
+            self.save_and_back = True
+
+        if new_image and new_image.strip(): 
+            self.updated_item[4] = new_image.strip()
+            self.save_and_back = True
+
+        if self.save_and_back:
+            db.UpdateNewItemDetails(tuple(map(self.updated_item.__getitem__, [1, 3, 4, 0])))
+            self.ReturnBack()
+        else:
+            WrongItemPopUp('Nothing to save.')
 
 
     def DeleteOldScreen(self):
         old_template = sm.get_screen('details_update').ids.update_box_template
         sm.get_screen('details_update').ids.update_item_scroll.remove_widget(old_template)
-        sm.get_screen('details_update').ids.update_item_id.disabled = False
-        sm.get_screen('details_update').ids.update_item_id.text = ''
+        sm.get_screen('details_update').ids.update_item_id_row.disabled = False
+        self.ids.camera_take_picture.disabled = False
+        sm.get_screen('details_update').ids.update_item_id.text = 'None'
+        self.save_and_back = False
+
+    def CameraClick(self):
+        if NoCamera:
+            WrongItemPopUp('Need camera permission. Enable camera permission from phone settings for this app.')
+            self.ids.camera_take_picture.disabled = True
+        else:
+            sm.get_screen('take_picture').which_window = 'details_update'
+            sm.current = 'take_picture'
+
+    def RefreshBack(self):
+        self.DeleteOldScreen()
 
     def ReturnBack(self):
         self.DeleteOldScreen()
@@ -260,19 +321,26 @@ class DeleteItem(BoxLayout):
         self.itemm = item
 
     def DeleteItemDataBase(self):
-        if self.itemm[4] != 'imgs/test.jpg':
+        if self.itemm[4] != 'imgs/test.jpg' and self.itemm[4] != 'imgs/presplash.png':
             try:
                 os.remove(self.itemm[4])
             except:
-                WrongItemPopUp('Can not delete the image or image does not exists.')
+                WrongItemPopUp("Can't delete image.")
+                return
         db.DeleteItem(self.itemm[0])
-        return 1
+        WrongItemPopUp("Delete sucessful.")
+        self.RefreshButton()
+        sm.get_screen('details_update').ids.update_item_id.values = db.id_list()
+        return
 
     def DeleteOldScreen(self):
         old_template = sm.get_screen('details_update').ids.update_box_template
         sm.get_screen('details_update').ids.update_item_scroll.remove_widget(old_template)
-        sm.get_screen('details_update').ids.update_item_id.disabled = False
-        sm.get_screen('details_update').ids.update_item_id.text = ''
+        sm.get_screen('details_update').ids.update_item_id_row.disabled = False
+        sm.get_screen('details_update').ids.update_item_id.text = 'None'
+
+    def RefreshButton(self):
+        self.DeleteOldScreen()
 
     def ReturnBack(self):
         self.DeleteOldScreen()
@@ -281,6 +349,10 @@ class DeleteItem(BoxLayout):
 class UpdateItemDetails(Screen):
     update_item_id = ObjectProperty()
     action = StringProperty()
+
+    def ID_list(self):
+        self.update_item_id.values = db.id_list()
+        return 
 
     def get_item_details(self):
         self.item_id = self.update_item_id.text 
@@ -292,7 +364,7 @@ class UpdateItemDetails(Screen):
         else:
             WrongItemPopUp('Please supply the item id.')
             return 0
-        self.update_item_id.disabled = True
+        self.ids.update_item_id_row.disabled = True
         return 1
 
     def DeleteMyItem(self):
@@ -301,7 +373,6 @@ class UpdateItemDetails(Screen):
     
     def UpdateMyItem(self):
         llayout = UpdateItemProperties(item=self.item)
-        llayout.ids.update_item_cost_current.text = str(self.item[3])
         return llayout
 
     def ShowItemDetails(self, action):
@@ -314,13 +385,14 @@ class UpdateItemDetails(Screen):
         layout.ids.update_image.source = self.item[4]
 
         SpecificLayout = self.UpdateMyItem() if action == 'update' else self.DeleteMyItem()
-        
+        self.ids['update_item_box_template'] = SpecificLayout 
         layout.add_widget(SpecificLayout)
 
         self.ids.update_item_scroll.add_widget(layout)
     
     def ReturnBack(self):
-        self.update_item_id.text = ''
+        self.ids.update_item_id_row.disabled = False
+        self.update_item_id.text = 'None'
         sm.current = 'all_items'
 
 def WrongItemPopUp(popup_text):
@@ -339,7 +411,7 @@ class WindowManager(ScreenManager):
 
 sm = WindowManager()
 
-screens = [AllItemWindow(name="all_items"), AddItemWindow(name='new_item_add'), UpdateItemDetails(name='details_update'), \
+screens = [MainStoreWindow(name="all_items"), AddItemWindow(name='new_item_add'), UpdateItemDetails(name='details_update'), \
         TakePicture(name='take_picture')]
 for screen in screens:
     sm.add_widget(screen)
@@ -351,20 +423,8 @@ class InventoryManagerApp(App):
     @property
     def storage_path(self):
         return self.user_data_dir
-
+    
     def build(self):
-
-        try:
-            from android.permissions import request_permissions, Permission
-            request_permissions([
-                Permission.INTERNET,
-                Permission.CAMERA,
-                Permission.WRITE_EXTERNAL_STORAGE,
-                Permission.READ_EXTERNAL_STORAGE,
-            ])
-        except:
-            pass
-
         return sm
 
 if __name__ == '__main__':

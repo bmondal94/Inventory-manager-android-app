@@ -2,47 +2,85 @@
 	name: 'details_update'
 	update_item_id: update_item_id
 	action: 'update'
+	on_pre_enter: root.ID_list()
+
+	canvas.before:
+		Color:
+			rgba: 1,1,1,1
+		Rectangle:
+			pos: self.pos
+			size: self.size
 	BoxLayout:
 		orientation: 'vertical'
-		Label:
+		BoxLayout:
 			canvas.before:
 				Color:
 					rgba: 0,0,1,1
 				Rectangle:
 					pos: self.pos
 					size: self.size
-			text: 'Update item window'
 			size_hint_y: 0.1
+			padding: [20,0,0,0]
+			Label:
+				text: 'Inventory Manager'
+				bold: True
+				size_hint_x: None
+				font_size: '25sp'
+				size: self.texture_size
 		BoxLayout:
-			size_hint_y: 0.1
-			orientation: 'horizontal'
+			orientation: 'vertical'
 			spacing: 5
-			canvas.before:
-				Color:
-					rgba: 1,0,0,0.5
-				Rectangle:
-					pos: self.pos
-					size: self.size
+			padding: 10
+			Label:
+				canvas.before:
+					Color:
+						rgba: 0,0.5,1,1
+					RoundedRectangle:
+						pos: self.pos
+						size: self.size
+				id: update_item_window_
+				text: 'Update item details'
+				size_hint_y: 0.1
 			BoxLayout:
-				orientation: 'horizontal'
-				Label:
-					text: 'Item ID:'
-					size: self.texture_size
-				
-				TextInput:
-					id: update_item_id
-
-			Button:
-				text: 'Show'
-				size_hint_x: 0.2
-				on_press:
-					if root.get_item_details(): root.ShowItemDetails(root.action) 
-			Button:
-				text: 'Back'
-				size_hint_x: 0.2
-				on_press: root.ReturnBack()
-			
-		ScrollView:
-			id: update_item_scroll
-			size_hint: (1, 0.8)
-
+				size_hint_y: 0.2
+				orientation: 'vertical'
+				spacing: 5
+				id: update_item_id_row
+				BoxLayout:
+					orientation: 'horizontal'
+					padding: 5
+					canvas.before:
+						Color:
+							rgba: 0,0.5,1,0.5
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					size_hint: (1, 0.05)  #  update_item_id.texture_size
+					Label:
+						text: 'Item ID:'
+						#size_hint: None, None
+						#size: self.texture_size
+					FloatLayout:
+						Spinner:
+							id: update_item_id
+							size_hint: None, None
+							text: 'None'
+							size:  350, 100
+							pos_hint: {'center': (.3, .5)}
+	
+				BoxLayout:
+					orientation: 'horizontal'
+					spacing: 5
+					size_hint_y: 0.03
+					Button:
+						text: 'Show'
+						on_press:
+							if root.get_item_details(): root.ShowItemDetails(root.action) 
+					Button:
+						text: 'Back'
+						on_press: root.ReturnBack()
+					
+			BoxLayout:
+				id: update_item_scroll
+				#size_hint: (1, 0.6)
+	

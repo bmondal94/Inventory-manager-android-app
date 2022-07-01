@@ -19,9 +19,9 @@ This is an **android app** for managing your inventory items. The `apk` file is 
 # Button details
 ## Main store
 * Here you can change item counts and `Add`, `Update`, or `Delete` an item.
-  * **+** : To increase the item count. You can put the number of item you want to change in the text box corresponding to the box next to the `+` symbol. 
+  * **+** : To increase the item count. You can put the number of item you want to change in the text box next to the `+` symbol. 
   And then click on `+` sign.
-  * **-** : To deduct the item count. You can put the number of item you want to change in the text box corresponding to the box next to the `-` symbol. 
+  * **-** : To deduct the item count. You can put the number of item you want to change in the text box next to the `-` symbol. 
   And then click on `-` sign.
   * **Add**: To add new item in the store.
   * **Update**: To update an item details, such as item cost.
@@ -30,32 +30,38 @@ This is an **android app** for managing your inventory items. The `apk` file is 
 ## Add new items
 * Here you can add new item (s). 
   * **Item name** : Name of the new item. This is mandatory.
-  * **Item ID** : The unique id of the item. The id shoud be unique. This is mandatory.
+  * **Item ID** : The unique id of the item. The id should be unique. This is mandatory. You can also generate random ID.
+  * **Generate**: Generates random ID.
   * **Item counts**: Number count of that item. Defauls is 0. If nothing is supplied 0 will be used.
   * **Item cost**: Item cost per item.  Defauls is 0. If nothing is supplied 0 will be used.
   * **Image**: The image for the item. You can add it manually or you can use the camera to `Take picutre`. Defaults 'imgs/test.jpg'.
-  * **Take picutre**: To take a picture of the item.
-  * **Add to bucket**: After you entry the item details you have to add it to the bucket. It you don't add the item to bucket the item will bot be save. 
-  You can add multiple items in the bucket. Each time you add a valid item you will find it in the `Items added` list. 
+  * **Camera**: To take a picture of the item.
+  * **Add to bucket**: After you entry the item details you have to add it to the bucket. Then `Save` it. If you don't add the item to bucket the item can not be save. 
+  You can add multiple items in the bucket. Each time you add a valid item, you will find it in the `Items added` list. 
   * **Save**: Finally save all your items in the bucket.
   * **Quit**: If you want to quit.
   
-## Update item window
-#### Update item property
-* Update the item details such as item cost.
-  * **Item ID**: Please enter the `item ID` for which you want to update the details, in the text field next to it. 
+## Update item details
+* Update the item details such as item name, image and cost.
+  * **Item ID**: Please choose the `item ID` for which you want to update the details. 
   * **Show**: On click you will see the details about the item.
   * **Back**: If you want to go back.
+  * **New name**: Put the new name in this text field.
+  * **New image**: Put the new image in this text field. or,
+  * **Camera**: Take a picture of the item.
   * **New cost**: Put the new cost in this text field.
   * **Save**: Finally save the update.
+  * **Refresh**: Reset the window for new input.
   * **Quit**: If you want to quit.
   
-#### Delete item
+  
+## Delete item
 * To delete an item.
-  * **Item ID**: Please enter the `item ID` for which you want to update the details, in the text field next to it. 
+  * **Item ID**: Please choose the `item ID` for which you want to update the details. 
   * **Show**: On click you will see the details about the item.
   * **Back**: If you want to go back.
-  * **Confirm**: To delete click here.
+  * **Confirm**: To delete the item click here.
+  * **Refresh**: Reset the window for new input.
   * **Quit**: If you want to quit.
 
 

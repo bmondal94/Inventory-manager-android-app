@@ -6,134 +6,174 @@
 	item_number: item_numbers
 	item_cost: item_cost
 	image: image_path
-
+	canvas.before:
+		Color:
+			rgba: 1,1,1,1
+		Rectangle:
+			pos: self.pos
+			size: self.size
 	BoxLayout:
-		orientation: 'vertical'
-		Label:
+		orientation:'vertical'
+		BoxLayout:
 			canvas.before:
 				Color:
 					rgba: 0,0,1,1
 				Rectangle:
 					pos: self.pos
 					size: self.size
-			text: 'Add new items'
-			size_hint: (1, 0.2)
-		BoxLayout:
-			orientation:'vertical'
-			canvas.before:
-				Color:
-					rgba: 0.4,0.4,0.7,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
+			size_hint_y: 0.1
+			padding: [20,0,0,0]
+			Label:
+				text: 'Inventory Manager'
+				bold: True
+				size_hint_x: None
+				font_size: '25sp'
+				size: self.texture_size
+
+		BoxLayout:	
+			orientation: 'vertical'
+			padding: 10
 			BoxLayout:
-				orientation: 'horizontal'
-				Label:
-					text: 'Item name*'
-
-				TextInput:
-					id: item_name
-					text: 'test'
-					#multiline: False
-
-			BoxLayout:
-				orientation: 'horizontal'
-				Label:
-					text: 'Item ID*'
-
-				BoxLayout:
-					orientation: 'horizontal'
-					TextInput:
-						id: item_id
-						text: '1'
-					Button:
-						text: 'Generate'
-						on_press: root.GenerateRandomId()
-
-			BoxLayout:
-				orientation: 'horizontal'
-				Label:
-					text: 'Item counts'
-
-				TextInput:
-					id: item_numbers
-					text: '0'
-
-			BoxLayout:
-				orientation: 'horizontal'
-				Label:
-					text: 'Item cost (/per item)'
-
-				TextInput:
-					id: item_cost
-					text: '0'
-
-			BoxLayout:
-				orientation: 'horizontal'
-				Label:
-					text: 'Image'
-				BoxLayout:
-					orientation: 'horizontal'
-					TextInput:
-						id: image_path
-						text: 'imgs/test.jpg'
-					Button:
-						id: camera_take_picture
-						text: 'Take picture'	
-						on_press: root.CameraClick()
-		Label:
-			canvas.before:
-				Color:
-					rgba: 0.4,0.7,0.4,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
-			text: '* is mandatory. \nThe default item number is 0. \nThe default item cost is 0. \nThe default image path is test.jpg .\n Multiple item can be added.'
-			#size_hint: None, None
-			size: self.texture_size
-
-		Label:
-			canvas.before:
-				Color:
-					rgba: 0.5,0,0.1,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
-			text: 'Items added: '
-			size_hint: (None, None)
-			size: self.texture_size
-
-		ScrollView:
-			id: add_item_label
-			canvas.before:
-				Color:
-					rgba: 0.4,0.7,0.5,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
-			BoxLayout:
-				id: add_item_label_box
 				orientation: 'vertical'
-				size_hint_y: None
-				height: self.minimum_height
-		Button:
-			text: 'Add to bucket'
-			size_hint_y: 0.2
-			on_release: if root.CheckItemsEligibility(): root.AddItemWidget()
-
-		BoxLayout:
-			orientation: 'horizontal'
-			size_hint_y: 0.2
-			Button:
-				text: 'Save'
-				on_release: 
-					root.Submit()
-			Button:
-				text: 'Quit'
-				on_release:
-					root.manager.transition.direction = "left"
-					root.ReturnBack()
-
+				spacing: 5
+				Label:
+					canvas.before:
+						Color:
+							rgba: 0,0.5,1,1
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					text: 'Add new items'
+					size_hint_y: 0.5
+				BoxLayout:
+					orientation:'vertical'
+					padding: 5
+					size_hint_y: 1.5
+					canvas.before:
+						Color:
+							rgba: 0.1,0.4,0.5,0.8
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					BoxLayout:
+						orientation: 'horizontal'
+						Label:
+							text: 'Item name*'
+		
+						TextInput:
+							id: item_name
+							cursor_color: 0,0,0,1
+							text: 'test'
+							on_text: root.CheckLength_name()
+							#multiline: False
+		
+					BoxLayout:
+						orientation: 'horizontal'
+						Label:
+							text: 'Item ID*'
+		
+						BoxLayout:
+							orientation: 'horizontal'
+							TextInput:
+								id: item_id
+								cursor_color: 0,0,0,1
+								text: '1'
+								on_text: root.CheckLength_id()
+							Button:
+								text: 'Generate'
+								on_press: root.GenerateRandomId()
+		
+					BoxLayout:
+						orientation: 'horizontal'
+						Label:
+							text: 'Item counts'
+		
+						TextInput:
+							id: item_numbers
+							cursor_color: 0,0,0,1
+							text: '0'
+		
+					BoxLayout:
+						orientation: 'horizontal'
+						Label:
+							text: 'Item cost (/per item)'
+		
+						TextInput:
+							id: item_cost
+							cursor_color: 0,0,0,1
+							text: '0'
+		
+					BoxLayout:
+						orientation: 'horizontal'
+						Label:
+							text: 'Image'
+						BoxLayout:
+							orientation: 'horizontal'
+							TextInput:
+								id: image_path
+								cursor_color: 0,0,0,1
+								text: 'imgs/test.jpg'
+							Button:
+								id: camera_take_picture
+								text: 'Camera'	
+								on_press: root.CameraClick()
+				Label:
+					canvas.before:
+						Color:
+							rgba: 0.1,0.4,0.5,1
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					text: ' - "*" is mandatory. \n- The default item number is 0. \n- The default item cost is 0. \n- The default image path is test.jpg .\n- Multiple item can be added.'
+					#size_hint: None, None
+					size: self.texture_size
+		
+				BoxLayout:
+					orientation: 'vertical'
+					canvas.before:
+						Color:
+							rgba: 0.4,0.7,0.5,1
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					padding: [5, 5]
+					Label:
+						text: 'Items added: '
+						size_hint: (None, None)
+						size: self.texture_size
+					ScrollView:
+						id: add_item_label
+						BoxLayout:
+							id: add_item_label_box
+							orientation: 'vertical'
+							size_hint_y: None
+							height: self.minimum_height
+							padding: [3, 3]
+		
+				BoxLayout:
+					orientation: 'vertical'
+					spacing: 3
+					#padding: [0,3,0,0]
+					size_hint_y: 0.6
+					Button:
+						text: 'Add to bucket'
+						size_hint_y: 0.025
+						on_release: if root.CheckItemsEligibility(): root.AddItemWidget()
+			
+					BoxLayout:
+						orientation: 'horizontal'
+						size_hint_y: 0.025
+						spacing: 5
+						Button:
+							text: 'Save'
+							on_release: 
+								root.Submit()
+						Button:
+							text: 'Quit'
+							on_release:
+								root.manager.transition.direction = "left"
+								root.ReturnBack()
+	
 <AddItemWidgetLabel>:
 	id: add_item_widget_label
 	size_hint: (None, None)
