@@ -41,9 +41,14 @@
 				Label:
 					text: 'Item ID*'
 
-				TextInput:
-					id: item_id
-					text: '1'
+				BoxLayout:
+					orientation: 'horizontal'
+					TextInput:
+						id: item_id
+						text: '1'
+					Button:
+						text: 'Generate'
+						on_press: root.GenerateRandomId()
 
 			BoxLayout:
 				orientation: 'horizontal'
@@ -71,11 +76,10 @@
 					orientation: 'horizontal'
 					TextInput:
 						id: image_path
-						size_hint_x: 0.25
 						text: 'imgs/test.jpg'
 					Button:
+						id: camera_take_picture
 						text: 'Take picture'	
-						size_hint_x: 0.25
 						on_press: root.CameraClick()
 		Label:
 			canvas.before:

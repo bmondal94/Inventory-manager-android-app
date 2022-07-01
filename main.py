@@ -24,6 +24,7 @@ from functools import partial
 from kivy.clock import Clock
 ##from kivy.resources import resource_add_path, resource_find
 from database import DataBase 
+import string
 import random
 import os
 import time
@@ -32,13 +33,24 @@ Builder.load_file('kvFiles/inventorymanager.kv')
 Builder.load_file('kvFiles/each_item_box_template.kv')
 
 Builder.load_file('kvFiles/adding_new_item_window.kv')
-Builder.load_file('kvFiles/camera_window.kv')
 
 Builder.load_file('kvFiles/updating_item_details_window.kv')
 Builder.load_file('kvFiles/item_details_update_template.kv')
 Builder.load_file('kvFiles/show_item_details_template.kv')
 
 Builder.load_file('kvFiles/delete_item_template.kv')
+
+try:
+    from android.permissions import request_permissions, Permission
+    request_permissions([
+        Permission.INTERNET,
+        Permission.CAMERA,
+        Permission.WRITE_EXTERNAL_STORAGE,
+        Permission.READ_EXTERNAL_STORAGE,
+    ])
+    Builder.load_file('kvFiles/camera_window.kv')
+except:
+    NoCamera = True
 
 DataBaseFile = 'StoreData.db'
 db = DataBase(DataBaseFile)
@@ -116,8 +128,19 @@ class AddItemWindow(Screen):
         self.ItemList = []
         self.ItemListIds = []
 
+    def GenerateRandomId(self):
+        chars = string.ascii_uppercase + string.digits + string.ascii_lowercase
+        size = random.randint(2, 6)
+        RandomID =  ''.join(random.choice(chars) for _ in range(size))
+        self.ids.item_id.text = RandomID
+            
+
     def CameraClick(self):
-        sm.current = 'take_picture'
+        if NoCamera:
+            WrongItemPopUp('Need camera permission. Enable camera permission from phone settings for this app.')
+            self.ids.camera_take_picture.disabled = True
+        else:
+            sm.current = 'take_picture'
 
     def CheckItemsEligibility(self):
         item_id, item_name, item_numbers, item_cost, item_img_path = \
@@ -125,7 +148,7 @@ class AddItemWindow(Screen):
         self.item_cost.text.strip(), self.image.text.strip()
 
         check_item_id_database = db.check_item_eligibility(item_id)
-        self.reset()
+
         if not item_id:
             WrongItemPopUp('Item id is mandatory. Please supply an appropriate unique item id.')
             return False
@@ -153,7 +176,7 @@ class AddItemWindow(Screen):
             self.check_new_item = (item_id, item_name, item_numbers, item_cost, item_img_path)
             self.ItemList.append(self.check_new_item)
             self.ItemListIds.append(item_id)
-
+            self.reset()
         return True
 
     def Submit(self):
@@ -162,24 +185,23 @@ class AddItemWindow(Screen):
             self.ReturnBack()
             return
         else:
-            WrongItemPopUp('No valid items entered so far. Please make sure you clicked "Add to bucket" before click on "Save".')
+            WrongItemPopUp('Click on "Add to bucket" and then "Save".')
         return 
 
 
     def ReturnBack(self):
         self.ItemList = []
         self.ItemListIds = []
-        self.image.disabled = False
-        self.image.text = 'imgs/test.jpg'
+        self.reset()
         sm.current = "all_items"
         self.ids.add_item_label_box.clear_widgets()
 
     def reset(self):
         self.item_id.text = ''
         self.item_namee.text = ''
-        self.item_number.text = ''
-        self.item_cost.text = ''
-        self.image.text = ''
+        self.item_number.text = '0'
+        self.item_cost.text = '0'
+        self.image.text = 'imgs/test.jpg'
         self.image.disabled = False
 
     def AddItemWidget(self):

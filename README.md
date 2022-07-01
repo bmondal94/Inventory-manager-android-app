@@ -1,11 +1,12 @@
 # Inventory-manager-android-app
-This is an **android app** for managing you inventory items. The `apk` file is in the `bin/` folder. 
+This is an **android app** for managing your inventory items. The `apk` file is in the `bin/` folder. 
 
 # The `apk` file
 * ![Download](bin/inventorymanager-0.1-arm64-v8a_armeabi-v7a-debug.apk)
 
 # Details
-* The app was created with `python kivy`. 
+* The app was created with `python kivy` and build using `Buildozer` .
+* The app needs additional CAMERA permission to take picture of an item if needed. 
 * It creates a `sqlite` database for the items: "StoreData.db"
 * Each item has
   * a name
@@ -65,5 +66,5 @@ This is an **android app** for managing you inventory items. The `apk` file is i
 
 
   
-# LICENSE agreement
-  The app is completely free and open source.
+# LICENSE
+  The app is under GNU General Public License agreement. It is completely free and open source.
