@@ -1,0 +1,51 @@
+<CustomerCheckout>:
+	orientation: 'vertical'
+	BoxLayout:
+		orientation: 'vertical'
+		canvas.before:
+			Color:
+				rgba: 0.4,0.7,0.5,1
+			RoundedRectangle:
+				pos: self.pos
+				size: self.size
+		padding: [5, 5]
+		Label:
+			text: 'Items added: '
+			size_hint: (None, None)
+			size: self.texture_size
+		ScrollView:
+			id: add_item_label
+			BoxLayout:
+				id: add_item_label_box
+				orientation: 'vertical'
+				size_hint_y: None
+				height: self.minimum_height
+				padding: [3, 3]
+	
+	BoxLayout:
+		orientation: 'vertical'
+		spacing: 3
+		#padding: [0,3,0,0]
+		size_hint_y: 0.6
+		Button:
+			text: 'Add to bucket'
+			size_hint_y: 0.025
+			on_release: 
+				root.AddItemWidget()
+				root.RefreshScreen()
+	
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.025
+			spacing: 5
+			Button:
+				text: 'Save'
+				on_release: 
+					#root.Submit()
+			Button:
+				text: 'Quit'
+				on_release:
+					#root.manager.transition.direction = "left"
+					#root.ReturnBack()
+
+

@@ -1,7 +1,6 @@
 <UpdateItemProperties>:
 	orientation: 'vertical'
 	spacing: 10
-	#size_hint_y: None
 	BoxLayout:
 		canvas.before:
 			Color:
@@ -12,7 +11,6 @@
 		orientation: 'vertical'
 		padding: 5 
 		spacing: 10
-		#size_hint_y: None
 		BoxLayout:
 			orientation: 'horizontal'
 			Label:
@@ -46,10 +44,10 @@
 		spacing: 5
 		Button:
 			text: 'Save'
-			on_press: if root.UpdateCostDataBase(update_item_cost_new.text): root.UpdateDataBase_for_Item(update_item_name_new.text, image_path.text)
+			on_press: if root.CheckNumericCost(update_item_cost_new.text): root.UpdateDataBase_for_Item(update_item_name_new.text, image_path.text)
 		Button:
 			text: 'Refresh'
-			on_press: root.RefreshBack()
+			on_press: root.RefreshScreen()
 		Button:
 			text: 'Quit'
 			on_press: root.ReturnBack()

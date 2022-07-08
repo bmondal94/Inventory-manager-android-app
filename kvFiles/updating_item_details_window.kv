@@ -1,8 +1,8 @@
 <UpdateItemDetails>:
 	name: 'details_update'
-	update_item_id: update_item_id
-	action: 'update'
-	on_pre_enter: root.ID_list()
+	#choose_item_id: choose_item_id
+
+	on_pre_enter: root.InitializeScreen()
 
 	canvas.before:
 		Color:
@@ -42,45 +42,79 @@
 				text: 'Update item details'
 				size_hint_y: 0.1
 			BoxLayout:
-				size_hint_y: 0.2
+				size_hint_y: 0.8
 				orientation: 'vertical'
 				spacing: 5
 				id: update_item_id_row
 				BoxLayout:
 					orientation: 'horizontal'
+					id: choose_item_id_box_id
 					padding: 5
+					size_hint_y: 0.3
 					canvas.before:
 						Color:
 							rgba: 0,0.5,1,0.5
 						RoundedRectangle:
 							pos: self.pos
 							size: self.size
-					size_hint: (1, 0.05)  #  update_item_id.texture_size
 					Label:
 						text: 'Item ID:'
-						#size_hint: None, None
-						#size: self.texture_size
-					FloatLayout:
-						Spinner:
-							id: update_item_id
-							size_hint: None, None
-							text: 'None'
-							size:  350, 100
-							pos_hint: {'center': (.3, .5)}
+					RelativeLayout:
+						id: choose_item_id_
+						
+					#FloatLayout:
+					#	Spinner:
+					#		id: choose_item_id
+					#		size_hint: None, None
+					#		text: 'None'
+					#		#size:  350, 100
+					#		size:  50, 10
+					#		pos_hint: {'center': (.3, .5)}
 	
 				BoxLayout:
 					orientation: 'horizontal'
 					spacing: 5
-					size_hint_y: 0.03
+					size_hint_y: 0.2
+					id: choose_item_id_box_id_
 					Button:
 						text: 'Show'
 						on_press:
-							if root.get_item_details(): root.ShowItemDetails(root.action) 
+							if root.get_item_details(): root.ShowItemDetails() 
 					Button:
 						text: 'Back'
 						on_press: root.ReturnBack()
 					
-			BoxLayout:
-				id: update_item_scroll
-				#size_hint: (1, 0.6)
-	
+				BoxLayout:
+					id: update_box_template
+					padding: [5,20,5,0]
+					orientation: 'vertical'
+					canvas.before:
+						Color:
+							rgba: 0.1,0.4,0.5,1
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					Image:
+						id: update_image
+						size: self.size 
+					
+					Label:
+						id: update_item_name 
+					BoxLayout:
+						orientation: 'horizontal'
+						spacing: 10
+						BoxLayout:
+							orientation: 'horizontal'
+							Label:
+								text: 'ID: '
+							Label:
+								id: update_item_id
+							Label:
+								text: 'Count: '
+							Label:
+								id: update_item_number
+							Label:
+								text: 'Cost: ' 
+							Label:
+								id: update_item_cost
+				

@@ -6,6 +6,9 @@
 	item_number: item_numbers
 	item_cost: item_cost
 	image: image_path
+
+	#on_pre_enter: root.ID_list()
+
 	canvas.before:
 		Color:
 			rgba: 1,1,1,1
@@ -124,7 +127,7 @@
 						RoundedRectangle:
 							pos: self.pos
 							size: self.size
-					text: ' - "*" is mandatory. \n- The default item number is 0. \n- The default item cost is 0. \n- The default image path is test.jpg .\n- Multiple item can be added.'
+					text: ' - "*" is mandatory. \n- The default item count is 0. \n- The default item cost is 0. \n- The default image path is test.jpg .\n- Multiple item can be added.'
 					#size_hint: None, None
 					size: self.texture_size
 		

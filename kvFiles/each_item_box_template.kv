@@ -53,6 +53,8 @@
 			TextInput:
 				id: NumberOfItemsAdd
 				text: '0'
+				#multiline: False
+				on_focus: NumberOfItemsAdd.text = '0'
 			Button:
 				id: delete_item_count
 				text: '-'
@@ -60,4 +62,6 @@
 			TextInput:
 				id: NumberOfItemsDelete
 				text: '0'
+				#multiline: False
+				on_focus: NumberOfItemsDelete.text = '0'
 
