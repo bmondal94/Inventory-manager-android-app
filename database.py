@@ -25,25 +25,27 @@ class DataBase:
         self.conn.close()
         return self.items
 
-    def update_item_count(self, item_id, new_item_numbers, action='Add'):
-        self.conn = sq.connect(self.filename)
+    def validate_item_count(self, item_id, new_item_numbers, action='Add'):
         check_negative = False
-        new_item_numbers = int(new_item_numbers) if new_item_numbers is not None and new_item_numbers.strip() else 0
-        if new_item_numbers < 0: return None, None
         if action=='Delete': new_item_numbers *= (-1)
 
+        self.conn = sq.connect(self.filename)
         current_count = self.conn.execute('''SELECT COUNT FROM ALLDATA WHERE ID==?''',(item_id,)).fetchone()
+        self.conn.close()
         up_count = current_count[0] + new_item_numbers
 
-        if up_count < 0:
-            check_negative = True
-        else:
-            with self.conn:
-                self.conn.execute('''UPDATE ALLDATA SET COUNT = ? WHERE ID==?''', (up_count, item_id))
-
-        self.conn.close()
+        if up_count < 0: check_negative = True
 
         return up_count, check_negative
+
+    def update_item_count(self, item_id, up_count):
+
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            self.conn.execute('''UPDATE ALLDATA SET COUNT = ? WHERE ID==?''', (up_count, item_id))
+        self.conn.close()
+
+        return 
 
     def check_item_eligibility(self, item_id):
         self.conn = sq.connect(self.filename)

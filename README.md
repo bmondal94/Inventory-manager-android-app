@@ -15,6 +15,10 @@ This is an **android app** for managing your inventory items. The `apk` file is 
   * `Cost`: cost of an item
  * You can change item counts easily. 
  * You can `Add` or `Delete` or `Update` item (details).
+ * You can `Print` the summary of the all the items in your stock.
+* You can apply the customer check-out.
+ * `Information`: To add ot delete or update the customer information.
+ * `Check-out`: Customer check-out window. 
  
 # Button details
 ## Main store
@@ -26,6 +30,9 @@ This is an **android app** for managing your inventory items. The `apk` file is 
   * **Add**: To add new item in the store.
   * **Update**: To update an item details, such as item cost.
   * **Delete**: To delete an item.
+  * **Print** : To print the summary of all the items.
+  * **Information** : Add/update the customer.
+  * **Check-out**: Customer check-out option.
   
 ## Add new items
 * Here you can add new item (s). 
@@ -64,7 +71,18 @@ This is an **android app** for managing your inventory items. The `apk` file is 
   * **Refresh**: Reset the window for new input.
   * **Quit**: If you want to quit.
 
-
+## Customer checkout
+* For customer checkout.
+  * **Item ID**: Please choose the `item ID` for which you want to update the details. 
+  * **Show**: On click you will see the details about the item.
+  * **Back**: If you want to go back.
+  * **Count**: How many items do you want to check-out? 
+  * **Discount**: The discount percent (per item) on the item cost. The default is 0 %.
+  * **Add to bucket**: After you entry the item details you have to add it to the bucket. Then `Save` it. If you don't add the item to bucket the item can not be save. 
+  You can add multiple items in the bucket. Each time you add a valid item, you will find it in the `Items added` list. 
+  * **Save**: Finally save all your items in the bucket.
+  * **Quit**: If you want to quit.
+  
 # Screens
 ###
 <img src='ScreenShots/page1.jpg' height='500'>  <img src='ScreenShots/page2.jpg' height='500'>  <img src='ScreenShots/page3.jpg' height='500'>
@@ -73,4 +91,8 @@ This is an **android app** for managing your inventory items. The `apk` file is 
 
   
 # LICENSE
-  The app is under GNU General Public License agreement. It is completely free and open source.
+  GNU General Public License. It is completely free and open source.
+  
+# Troubleshooting
+1. **App crashes on start**
+	* Please enable the camera access for this app in the phone settings. 

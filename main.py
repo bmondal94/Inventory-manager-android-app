@@ -44,6 +44,7 @@ Builder.load_file('kvFiles/item_details_update_template.kv')
 Builder.load_file('kvFiles/delete_item_template.kv')
 
 Builder.load_file('kvFiles/customer_checkout.kv')
+Builder.load_file('kvFiles/customer_checkout_popup_box.kv')
 
 NoCamera = True
 try:
@@ -64,23 +65,37 @@ db = DataBase(DataBaseFile)
 
 
 class ItemBoxTemplate(BoxLayout):
-    def CheckNegativeCount(self):
-        if self.updated_item_numbers is None: 
-            WrongItemPopUp("Only positive number allowed.")
+    def ValidateEnteredItemNumber(self, new_item_numbers):
+        try:
+            new_item_numbers = int(new_item_numbers) if new_item_numbers is not None and new_item_numbers.strip() else 0
+        except:
+            WrongItemPopUp("Count can't be fraction.")
             return 0
+        if new_item_numbers < 0: WrongItemPopUp("Only positive number is allowed.")
+
+        return new_item_numbers
+
+    def CheckNegativeCount(self):
         if self.CheckCountNegative:
-            WrongItemPopUp("Item count can't be negativ.")
+            WrongItemPopUp("Item stock already empty.")
         else:
+            db.update_item_count(self.ids.item_id.text, self.updated_item_numbers)
             self.ids.item_number.text = str(self.updated_item_numbers)
         return 1
 
     def buttonAddClicked(self, item_id, new_item_numbers):
-        self.updated_item_numbers, self.CheckCountNegative = db.update_item_count(item_id, new_item_numbers, action='Add')
-        if self.CheckNegativeCount(): self.ids.NumberOfItemsAdd.text = '0'
+        new_item_numbers = self.ValidateEnteredItemNumber(new_item_numbers)
+        if new_item_numbers > 0:
+            self.updated_item_numbers, self.CheckCountNegative = db.validate_item_count(item_id, new_item_numbers, action='Add')
+            self.CheckNegativeCount() 
+            self.ids.NumberOfItemsAdd.text = '0'
 
     def buttonDeleteClicked(self, item_id, new_item_numbers):
-        self.updated_item_numbers, self.CheckCountNegative = db.update_item_count(item_id, new_item_numbers, action='Delete')
-        if self.CheckNegativeCount(): self.ids.NumberOfItemsDelete.text = '0'
+        new_item_numbers = self.ValidateEnteredItemNumber(new_item_numbers)
+        if new_item_numbers > 0:
+            self.updated_item_numbers, self.CheckCountNegative = db.validate_item_count(item_id, new_item_numbers, action='Delete')
+            self.CheckNegativeCount()
+            self.ids.NumberOfItemsDelete.text = '0'
         
 
 class MainStoreWindow(Screen):
@@ -118,16 +133,25 @@ class MainStoreWindow(Screen):
             pdf = FPDF(orientation='P', unit='mm', format='A4')
             pdf.add_page()
             pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt='******** Welcome to Inventory Manager ********', ln=1, align='C')
+            pdf.cell(0, 10, txt='******** Welcome to Inventory Manager ********', ln=1, align='C')
 
-            hdr_field = ''.join([hdr_fld.rjust(20) + " " for hdr_fld in ['ID', 'NAME', 'COUNT', 'COST', 'IMAGE']])
-            pdf.cell(0, 10, txt='=' * len(hdr_field), ln=1, align='C')
-            pdf.cell(0, 10, txt=hdr_field, ln=1, align='C')
-            pdf.cell(0, 10, txt='-' * len(hdr_field), ln=1, align='C')
+            col_width = pdf.w / 5.5
+            spacing = 1.5
+            row_height = pdf.font_size * spacing
+
+            pdf.cell(0, 10, txt='='*80, ln=1, align='C')
+            for hdr_fld in ['ID', 'NAME', 'COUNT', 'COST', 'IMAGE']:
+                pdf.cell(col_width, row_height, txt=str(hdr_fld), border=0)
+            pdf.ln(row_height)
+            pdf.cell(0, 10, txt='='*80, ln=1, align='C')
+            pdf.ln(row_height)
 
             for item in self.summary_items:
-                row_item = ''.join([str(col).strip().rjust(20) + " " for  col in item])
-                pdf.cell(0, 10, txt = row_item, ln=1, align='C')
+                for col in item:
+                    pdf.cell(col_width, row_height, txt=str(col), border=0)
+                pdf.ln(row_height)
+                #row_item = ''.join([str(col).strip().rjust(20) + " " for  col in item])
+                #pdf.cell(0, 10, txt = row_item, ln=1, align='C')
 
             filepath_pdf = 'ItemsSummary_'+time.strftime("%Y%m%d_%H%M%S")+'.pdf'
             pdf.output(filepath_pdf)
@@ -136,7 +160,6 @@ class MainStoreWindow(Screen):
             WrongItemPopUp("No item exists.")
 
     def CustomerCheckOut(self):
-        sm.get_screen('customer_checkout').ids.update_item_window_.text = 'Customer checkout'
         sm.current = 'customer_checkout'
 
 class TakePicture(Screen):
@@ -246,9 +269,7 @@ class AddItemWindow(Screen):
         if len(self.ItemList) > 0:
             db.add_new_items(self.ItemList)
             self.add_new_item_widget_main_store()
-
             self.ReturnBack()
-            return
         else:
             WrongItemPopUp('Click on "Add to bucket" and then "Save".')
         return 
@@ -455,66 +476,6 @@ class Chooser(TextInput):
             self.dropdown.dismiss()
             self.dropdown = None
 
-class CustomerCheckout(BoxLayout):
-    def __init__(self, **kwargs):
-        super(CustomerCheckout, self).__init__(**kwargs)
-        self.itemm = None
-
-    def UpdateDataBase_for_Item(self, new_name, new_image):
-        if new_name and new_name.strip(): 
-            self.itemm[1] = new_name.strip() 
-            self.save_and_back = True
-
-        if new_image and new_image.strip(): 
-            self.itemm[4] = new_image.strip()
-            self.save_and_back = True
-
-        if self.save_and_back:
-            db.UpdateNewItemDetails(tuple(map(self.itemm.__getitem__, [1, 3, 4, 0])))
-            self.update_item_widget_main_store()
-            WrongItemPopUp("Update sucessful.")
-            self.RefreshScreen()
-        else:
-            WrongItemPopUp('Nothing to save.')
-
-    def update_item_widget_main_store(self):
-        get_all_items_screen_grid = sm.get_screen('all_items').ids.items_grid_layout
-        need_update_ids = get_all_items_screen_grid.ids[self.itemm[0]+'MainStore'].ids
-        need_update_ids.item_number.text = str(self.itemm[2])
-
-
-    def delete_item_widget_main_store(self):
-        get_all_items_screen_grid = sm.get_screen('all_items').ids.items_grid_layout
-        get_all_items_screen_grid.remove_widget(get_all_items_screen_grid.ids[self.itemm[0]+'MainStore'])
-
-    def RefreshScreen(self):
-        current_window = sm.get_screen('customer_checkout')
-        current_window.ResetDetails_part()
-        current_window.ids.choose_item_id_box_id.disabled = False
-        current_window.ids.choose_item_id_box_id_.disabled = False
-
-    def ReturnBack(self):
-        self.RefreshScreen()
-        sm.current = 'all_items'
-
-    def AddItemWidget(self):
-        # https://stackoverflow.com/a/61707198
-        scroll_vp_height = self.ids.add_item_label.viewport_size[1]
-        scroll_height = self.ids.add_item_label.height
-
-        label = AddItemWidgetLabel() 
-        label.text = '        '+ self.itemm[0] + ':  ' + self.itemm[1] 
-        self.ids.add_item_label_box.add_widget(label)
-        
-        if scroll_vp_height > scroll_height:
-            scroll_fact = self.ids.add_item_label.scroll_y
-            bottom = scroll_fact * (scroll_vp_height-scroll_height)
-            Clock.schedule_once(partial(self.adjust_scroll, bottom+label.height))
-
-    def adjust_scroll(self, bottom, dt):
-        scroll_vp_height = self.ids.add_item_label.viewport_size[1]
-        scroll_height = self.ids.add_item_label.height
-        self.ids.add_item_label.scroll_y = bottom / (scroll_vp_height-scroll_height)
 
 class UpdateItemDetails(Screen):
     action = StringProperty()
@@ -534,8 +495,6 @@ class UpdateItemDetails(Screen):
                 self.SpecificLayoutItemDetails_or_Delete(UpdateItemProperties())
             elif sm.current == 'delete_item':
                 self.SpecificLayoutItemDetails_or_Delete(DeleteItem())
-            elif sm.current == 'customer_checkout':
-                self.SpecificLayoutItemDetails_or_Delete(CustomerCheckout())
             else:
                 pass
             chooser = Chooser(choiceslist=db.id_list(), hint_text='Enter ID', size_hint=(0.5,None), height=30, pos_hint={'center_x':0.5, 'center_y':0.5})
@@ -572,8 +531,6 @@ class UpdateItemDetails(Screen):
     
     def ReturnBack(self):
         self.ResetDetails()
-        if sm.current == 'customer_checkout':
-            self.ids.item_details_specific_layout.ids.add_item_label_box.clear_widgets()
         sm.current = 'all_items'
 
     def ResetDetails_part(self):
@@ -590,6 +547,175 @@ class UpdateItemDetails(Screen):
         self.ids.choose_item_id_box_id_.disabled = False
         self.ids.item_details_specific_layout.disabled = True
 
+class CustomerCheckout(Screen):
+    def __init__(self, **kwargs):
+        super(CustomerCheckout, self).__init__(**kwargs)
+        self.CheckoutSummaryList = []
+
+    def ID_list(self):
+        self.ids.choose_item_id.values = db.id_list()
+    
+    def InitializeScreen(self):
+        #self.ID_list()
+        if 'choose_item_id' not in self.ids:
+            chooser = Chooser(choiceslist=db.id_list(), hint_text='Enter ID', size_hint=(0.5,None), height=30, pos_hint={'center_x':0.5, 'center_y':0.5})
+            self.ids.choose_item_id_.add_widget(chooser)
+            self.ids['choose_item_id'] = chooser
+        else:
+            self.ids.choose_item_id.choiceslist = db.id_list()
+        self.ids.update_box_template.disabled = True
+        self.ids.final_checkout_box.disabled = True
+        self.CheckoutSummaryList = []
+
+    def get_item_details(self):
+        self.item_id = self.ids.choose_item_id.text 
+        if self.item_id and self.item_id.strip():
+            self.item = db.get_item_properties(self.item_id.strip())
+            if self.item is None: 
+                WrongItemPopUp('Item id does not exist.')
+                return 0
+        else:
+            WrongItemPopUp('Please supply the item id.')
+            return 0
+        self.ids.choose_item_id_box_id.disabled = True
+        self.ids.choose_item_id_box_id_.disabled = True
+        self.ids.update_box_template.disabled = False
+        self.ids.final_checkout_box.disabled = False
+        return 1
+
+    def ShowItemDetails(self):
+        self.ids.checkout_item_name.text = self.item[1]
+        self.ids.checkout_item_number.text = str(self.item[2])
+        self.ids.checkout_item_cost.text = str(self.item[3])
+        self.ids.checkout_image.source = self.item[4]
+
+    def ValidateEnteredItemNumber(self):
+        new_item_numbers = self.ids.Checkout_count.text 
+        try:
+            new_item_numbers = int(new_item_numbers) if new_item_numbers is not None and new_item_numbers.strip() else 0
+        except:
+            WrongItemPopUp("Count can't be fraction.")
+            return 0
+        if new_item_numbers < 0: 
+            WrongItemPopUp("Only positive number is allowed.")
+        elif new_item_numbers == 0:
+            WrongItemPopUp("No item to add.")
+        
+        return new_item_numbers
+
+    def ValidateInputDiscount(self):
+        self.discount_percent = self.ids.Checkout_discount.text
+        if self.discount_percent is not None and self.discount_percent.strip():
+            try:
+                self.discount_percent = float(self.discount_percent)
+                if self.discount_percent < 0:
+                    WrongItemPopUp('Item cost should be postive.')
+                    return 0
+            except:
+                WrongItemPopUp("Only numbers are allowed.")
+                return 0
+        else:
+            self.discount_percent = 0
+        return 1
+
+    def CalculateFinalCost(self):
+        item_current_cost = self.item[3]
+        discount_amount = item_current_cost * self.discount_percent / 100
+        final_cost_per_item = item_current_cost - discount_amount
+        return final_cost_per_item
+
+    def AddClicked(self):
+        self.checkout_item_count = self.ValidateEnteredItemNumber()
+        if self.checkout_item_count > 0:
+            self.updated_item_numbers, self.CheckCountNegative = db.validate_item_count(self.item[0], self.checkout_item_count, action='Add')
+            if self.CheckCountNegative:
+                WrongItemPopUp("Item stock already empty.")
+                return 0
+            else:
+                if self.ValidateInputDiscount():
+                    self.final_cost = self.checkout_item_count * self.CalculateFinalCost()
+                    for_later = (self.item[0], self.item[1], self.checkout_item_count, self.item[3], self.discount_percent, self.final_cost)
+                    self.CheckoutSummaryList.append(for_later)
+                    self.ids.Checkout_count.text = '1'
+                    self.ids.Checkout_discount.text = '0'
+                else:
+                    return 0
+            self.AddItemWidget()
+            self.RefreshScreen()
+        else:
+            pass
+
+        return 1
+
+    def AddItemWidget(self):
+        # https://stackoverflow.com/a/61707198
+        scroll_vp_height = self.ids.add_item_label.viewport_size[1]
+        scroll_height = self.ids.add_item_label.height
+
+        label = AddItemWidgetLabel() 
+        label.text = ' '*6 + self.item[0] + ':  ' + self.item[1] + ' --> ' + str(self.checkout_item_count) + ', ' + str(self.final_cost)
+        self.ids.add_item_label_box.add_widget(label)
+        
+        if scroll_vp_height > scroll_height:
+            scroll_fact = self.ids.add_item_label.scroll_y
+            bottom = scroll_fact * (scroll_vp_height-scroll_height)
+            Clock.schedule_once(partial(self.adjust_scroll, bottom+label.height))
+
+    def adjust_scroll(self, bottom, dt):
+        scroll_vp_height = self.ids.add_item_label.viewport_size[1]
+        scroll_height = self.ids.add_item_label.height
+        self.ids.add_item_label.scroll_y = bottom / (scroll_vp_height-scroll_height)
+
+    def ResetDetails(self):
+        self.ids.checkout_item_name.text = ''
+        self.ids.checkout_item_number.text = ''
+        self.ids.checkout_item_cost.text = ''
+        self.ids.checkout_image.source = ''
+        self.ids.choose_item_id.text = ''
+
+    def ResetDisable(self):
+        self.ids.choose_item_id_box_id.disabled = False
+        self.ids.choose_item_id_box_id_.disabled = False
+        self.ids.update_box_template.disabled = True
+        self.ids.final_checkout_box.disabled = True
+
+    def RefreshScreen(self):
+        self.ResetDetails()
+        self.ResetDisable()
+
+    def ReturnBack(self):
+        self.RefreshScreen()
+        self.ids.Checkout_count.text = '1'
+        self.ids.Checkout_discount.text = '0'
+        self.ids.add_item_label_box.clear_widgets()
+        sm.current = 'all_items'
+
+    def Submit(self):
+        if len(self.CheckoutSummaryList) > 0:
+            print(self.CheckoutSummaryList)
+            savedialog()
+            #db.add_new_items(self.ItemList)
+            #self.add_new_item_widget_main_store()
+
+            #self.ReturnBack()
+        else:
+            WrongItemPopUp('Click on "Add to bucket" and then "Save".')
+        return 
+
+   #     sm.current = 'enter_customer'
+   #     for row in self.NeedUpdateLater_Count:
+
+   # def update_item_widget_main_store(self):
+   #     get_all_items_screen_grid = sm.get_screen('all_items').ids.items_grid_layout
+   #     need_update_ids = get_all_items_screen_grid.ids[self.item[0]+'MainStore'].ids
+   #     need_update_ids.item_number.text = str(self.item[2])
+
+
+   # def delete_item_widget_main_store(self):
+   #     get_all_items_screen_grid = sm.get_screen('all_items').ids.items_grid_layout
+   #     get_all_items_screen_grid.remove_widget(get_all_items_screen_grid.ids[self.itemm[0]+'MainStore'])
+
+
 def WrongItemPopUp(popup_text):
     content = Button(text='Close',
                     size_hint_y=0.1) 
@@ -601,6 +727,33 @@ def WrongItemPopUp(popup_text):
 
     pop.open()
 
+class savedialog(BoxLayout):
+    def __init__(self,**kwargs):
+        super(savedialog,self).__init__(**kwargs)
+        self.save_popup = SetCustomerPopup(self)
+
+    def save(self, *args):
+        self.save_popup.open()
+
+class SetCustomerPopupBox(BoxLayout):
+    pass
+    
+class SetCustomerPopup(Popup):
+    def __init__(self, savedialog, **kwargs):
+        super(SetCustomerPopup, self).__init__(**kwargs)
+
+        self.content = SetCustomerPopupBox()
+
+        self.savedialog = savedialog
+
+    def save(self, **kwargs):
+        _ = self.savedialog.name_input.text
+        self.dismiss()
+
+    def cancel(self,*args):
+        self.dismiss()
+
+
 class WindowManager(ScreenManager):
     pass
 
@@ -610,7 +763,7 @@ screens = [ MainStoreWindow(name="all_items"),
             AddItemWindow(name='new_item_add'), 
             UpdateItemDetails(name='details_update'), \
             UpdateItemDetails(name='delete_item'), \
-            UpdateItemDetails(name='customer_checkout'), \
+            CustomerCheckout(name='customer_checkout'), \
             TakePicture(name='take_picture')]
 
 for screen in screens:
