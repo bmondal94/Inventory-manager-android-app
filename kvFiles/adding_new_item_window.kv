@@ -182,3 +182,15 @@
 	size_hint: (None, None)
 	size: self.texture_size
 
+<AddItemWidgetLabelV2>:
+	orientation: 'horizontal'
+	size_hint_y: None
+	Label:
+		id: add_item_widget_label
+		size_hint: (None, None)
+		size: self.texture_size
+	Button:
+		text: 'Delete'
+		#size_hint_x: 0.1
+		on_press: root.CheckoutDeleteItemFromList(add_item_widget_label.text)
+

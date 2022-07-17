@@ -324,6 +324,15 @@ class AddItemWindow(Screen):
 class AddItemWidgetLabel(Label):
     pass
 
+class AddItemWidgetLabelV2(BoxLayout):
+    def CheckoutDeleteItemFromList(self, which_id_delete):
+        my_screen = sm.get_screen('customer_checkout')
+        imy_id = which_id_delete.split(':')[0].strip()
+        my_screen.CheckoutSummaryList.pop(imy_id)
+        imy_id += 'Checkout'
+        my_screen.ids.add_item_label_box.remove_widget(my_screen.ids[imy_id])
+
+
 class UpdateItemProperties(BoxLayout):
     def __init__(self, **kwargs):
         super(UpdateItemProperties, self).__init__(**kwargs)
@@ -550,7 +559,7 @@ class UpdateItemDetails(Screen):
 class CustomerCheckout(Screen):
     def __init__(self, **kwargs):
         super(CustomerCheckout, self).__init__(**kwargs)
-        self.CheckoutSummaryList = []
+        self.CheckoutSummaryList = {}
 
     def ID_list(self):
         self.ids.choose_item_id.values = db.id_list()
@@ -564,8 +573,8 @@ class CustomerCheckout(Screen):
         else:
             self.ids.choose_item_id.choiceslist = db.id_list()
         self.ids.update_box_template.disabled = True
-        self.ids.final_checkout_box.disabled = True
-        self.CheckoutSummaryList = []
+        self.ids.final_checkout_box_add.disabled = True
+        self.CheckoutSummaryList.clear()
 
     def get_item_details(self):
         self.item_id = self.ids.choose_item_id.text 
@@ -580,14 +589,17 @@ class CustomerCheckout(Screen):
         self.ids.choose_item_id_box_id.disabled = True
         self.ids.choose_item_id_box_id_.disabled = True
         self.ids.update_box_template.disabled = False
-        self.ids.final_checkout_box.disabled = False
+        self.ids.final_checkout_box_add.disabled = False
         return 1
 
     def ShowItemDetails(self):
         self.ids.checkout_item_name.text = self.item[1]
-        self.ids.checkout_item_number.text = str(self.item[2])
         self.ids.checkout_item_cost.text = str(self.item[3])
         self.ids.checkout_image.source = self.item[4]
+        temp_item_count = self.item[2]
+        if self.item[0] in self.CheckoutSummaryList:
+            temp_item_count -= sum([full_item[2] for full_item in self.CheckoutSummaryList[self.item[0]]])
+        self.ids.checkout_item_number.text = str(temp_item_count)
 
     def ValidateEnteredItemNumber(self):
         new_item_numbers = self.ids.Checkout_count.text 
@@ -627,15 +639,19 @@ class CustomerCheckout(Screen):
     def AddClicked(self):
         self.checkout_item_count = self.ValidateEnteredItemNumber()
         if self.checkout_item_count > 0:
-            self.updated_item_numbers, self.CheckCountNegative = db.validate_item_count(self.item[0], self.checkout_item_count, action='Add')
+            self.updated_item_numbers, self.CheckCountNegative = db.validate_item_count(self.item[0], self.checkout_item_count, action='Delete')
             if self.CheckCountNegative:
                 WrongItemPopUp("Item stock already empty.")
+                self.RefreshScreen()
                 return 0
             else:
                 if self.ValidateInputDiscount():
                     self.final_cost = self.checkout_item_count * self.CalculateFinalCost()
                     for_later = (self.item[0], self.item[1], self.checkout_item_count, self.item[3], self.discount_percent, self.final_cost)
-                    self.CheckoutSummaryList.append(for_later)
+                    if self.item[0] in self.CheckoutSummaryList:
+                        self.CheckoutSummaryList[self.item[0]].append(for_later)
+                    else:
+                        self.CheckoutSummaryList[self.item[0]] = [for_later]
                     self.ids.Checkout_count.text = '1'
                     self.ids.Checkout_discount.text = '0'
                 else:
@@ -652,19 +668,21 @@ class CustomerCheckout(Screen):
         scroll_vp_height = self.ids.add_item_label.viewport_size[1]
         scroll_height = self.ids.add_item_label.height
 
-        label = AddItemWidgetLabel() 
-        label.text = ' '*6 + self.item[0] + ':  ' + self.item[1] + ' --> ' + str(self.checkout_item_count) + ', ' + str(self.final_cost)
+        label = AddItemWidgetLabelV2() 
+        
+        label.ids.add_item_widget_label.text = ' '*6 + self.item[0] + ':  ' + self.item[1] + ' --> ' + str(self.checkout_item_count) + ', ' + str(self.final_cost)
         self.ids.add_item_label_box.add_widget(label)
+        self.ids[self.item[0]+'Checkout'] = label
         
         if scroll_vp_height > scroll_height:
-            scroll_fact = self.ids.add_item_label.scroll_y
+            scroll_fact = self.ids.add_item_label_box.scroll_y
             bottom = scroll_fact * (scroll_vp_height-scroll_height)
             Clock.schedule_once(partial(self.adjust_scroll, bottom+label.height))
 
     def adjust_scroll(self, bottom, dt):
-        scroll_vp_height = self.ids.add_item_label.viewport_size[1]
-        scroll_height = self.ids.add_item_label.height
-        self.ids.add_item_label.scroll_y = bottom / (scroll_vp_height-scroll_height)
+        scroll_vp_height = self.ids.add_item_label_box.viewport_size[1]
+        scroll_height = self.ids.add_item_label_box.height
+        self.ids.add_item_label_box.scroll_y = bottom / (scroll_vp_height-scroll_height)
 
     def ResetDetails(self):
         self.ids.checkout_item_name.text = ''
@@ -677,7 +695,7 @@ class CustomerCheckout(Screen):
         self.ids.choose_item_id_box_id.disabled = False
         self.ids.choose_item_id_box_id_.disabled = False
         self.ids.update_box_template.disabled = True
-        self.ids.final_checkout_box.disabled = True
+        self.ids.final_checkout_box_add.disabled = True
 
     def RefreshScreen(self):
         self.ResetDetails()
