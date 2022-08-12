@@ -69,8 +69,7 @@ class DataBase:
         item_ids = self.conn.execute('''SELECT * FROM ALLDATA''').fetchall()
         self.conn.close()
         #return sorted([id_[0] for id_ in item_ids])
-        return [id_[0] for id_ in item_ids]
-
+        return [(id_[0], id_[0]) for id_ in item_ids] + [(id_[1],id_[0]) for id_ in item_ids]
 
     def get_item_properties(self, item_id):
         self.conn = sq.connect(self.filename)
@@ -82,7 +81,7 @@ class DataBase:
     def UpdateNewItemDetails(self, partial_item):
         self.conn = sq.connect(self.filename)
         with self.conn:
-            self.conn.execute('''UPDATE ALLDATA SET NAME = ?, COST = ?, IMAGE = ? WHERE ID==?''', partial_item)
+            self.conn.execute('''UPDATE ALLDATA SET NAME = ?, COUNT = ?, COST = ?, IMAGE = ? WHERE ID==?''', partial_item)
         self.conn.close()
         return 
 
@@ -90,6 +89,84 @@ class DataBase:
         self.conn = sq.connect(self.filename)
         with self.conn:
             self.conn.execute('''DELETE FROM ALLDATA WHERE ID==?''', (item_id,))
+        self.conn.close()
+        return 
+
+    def UpdateCheckoutItemStock(self, partial_item):
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            self.conn.executemany('''UPDATE ALLDATA SET COUNT = COUNT - ? WHERE ID==?''', partial_item)
+        self.conn.close()
+        return 
+
+class CustomerDataBase:
+    def __init__(self, filename):
+        self.filename = filename
+        self.items = None
+        self.load()
+
+    def load(self):
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            self.conn.execute('''CREATE TABLE IF NOT EXISTS CUSTOMERDATA (
+                    ID  TEXT NOT NULL, 
+                    NAME  TEXT NOT NULL,
+                    EMAIL  TEXT,
+                    TOTAL_VISIT INTEGER,
+                    COMMENT  TEXT)''')
+        self.conn.close()
+
+    def update_visit_count(self, customer_id):
+
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            self.conn.execute('''UPDATE CUSTOMERDATA SET TOTAL_VISIT = TOTAL_VISIT + 1 WHERE ID==?''', (customer_id,))
+        self.conn.close()
+
+        return 
+
+    def check_customer_exists(self, customer_id):
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            ID_exist = self.conn.execute('''SELECT EXISTS(SELECT 1 FROM CUSTOMERDATA WHERE ID==?)''',(customer_id,)).fetchone()[0]
+        self.conn.close()
+
+        return ID_exist
+    
+    def add_new_customer(self, customer_list):
+        self.conn = sq.connect(self.filename)
+
+        with self.conn:
+            self.conn.execute('''INSERT INTO CUSTOMERDATA VALUES (?, ?, ?, ?, ?)''', customer_list)
+        
+        self.conn.close()
+        return
+
+    def id_list(self):
+        self.conn = sq.connect(self.filename)
+        item_ids = self.conn.execute('''SELECT * FROM CUSTOMERDATA''').fetchall()
+        self.conn.close()
+        #return sorted([id_[0] for id_ in item_ids])
+        return [(id_[0], id_[0]) for id_ in item_ids] + [(id_[1],id_[0]) for id_ in item_ids]
+
+    def DeleteCustomer(self, item_id):
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            self.conn.execute('''DELETE FROM CUSTOMERDATA WHERE ID==?''', (item_id,))
+        self.conn.close()
+        return 
+
+    def get_customer_properties(self, customer_id):
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            Item_Properties = self.conn.execute('''SELECT * FROM CUSTOMERDATA WHERE ID==?''',(customer_id,)).fetchone()
+        self.conn.close()
+        return Item_Properties
+
+    def update_customer_details(self, partial_item):
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            self.conn.execute('''UPDATE CUSTOMERDATA SET NAME = ?, EMAIL = ?, COMMENT = ? WHERE ID==?''', partial_item)
         self.conn.close()
         return 
 

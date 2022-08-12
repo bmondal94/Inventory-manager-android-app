@@ -1,5 +1,8 @@
 <MainStoreWindow>:
 	name: "all_items"
+
+	on_pre_enter: root.InitializeScreen()
+
 	canvas.before:
 		Color:
 			rgba: 1,1,1,1
@@ -38,11 +41,32 @@
 							pos: self.pos
 							size: self.size
 					text: 'Main Store'
+					bold: True
+					font_size: '20sp'
 					size_hint: (1, 0.1)
+				BoxLayout:
+					orientation: 'horizontal'
+					id: search_item_id_box_id
+					padding: 5
+					size_hint_y: 0.1
+					canvas.before:
+						Color:
+							rgba: 0.1,0.4,0.5,0.8
+							#rgba: 0,0.5,1,0.5
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					Label:
+						text: 'Search:'
+						size_hint_x: 0.32
+					RelativeLayout:
+						id: search_item_id
 				ScrollView:
 					id: item_scroll
-					size_hint: (1, 0.7)
-					padding: [0, 0, 0, 3]
+					size_hint: (1, 0.74)
+					#bar_width: 10
+					#bar_inactive_color: 0,0,0,1
+					#scroll_type: ['bars']
 					canvas.before:
 						Color:
 							rgba: 0,0,0,1
@@ -51,16 +75,16 @@
 							size: self.size
 				BoxLayout:
 					orientation: 'vertical'
-					size_hint_y: 0.1
+					size_hint_y: 0.16
 					spacing: 3
 					BoxLayout:
 						orientation: 'horizontal'			
-						size_hint_y: 0.05
+						#size_hint_y: 0.08
 						spacing: 5
 						Label:
 							canvas.before:
 								Color:
-									rgba: 0,0.5,1,0.5
+									rgba: 0.1,0.4,0.5,1
 								RoundedRectangle:
 									pos: self.pos
 									size: self.size
@@ -80,21 +104,28 @@
 
 					BoxLayout:
 						orientation: 'horizontal'			
-						size_hint_y: 0.05
+						#size_hint_y: 0.08
 						spacing: 5
 						Label:
 							canvas.before:
 								Color:
-									rgba: 0,0.5,1,0.5
+									rgba: 0.1,0.4,0.5,1
 								RoundedRectangle:
 									pos: self.pos
 									size: self.size
 							text: 'Customer:'
+							size_hint_x: 0.25
 						Button:
 							text: 'Information'
-							on_press: 
+							on_press: root.CustomerInfoPage() 
+							size_hint_x: 0.35
 							disable: True
 						Button:
 							text: 'Check-out'
 							on_press: root.CustomerCheckOut() 
+							size_hint_x: 0.25
 							disable: True	
+						Button:
+							text: 'Quit'
+							size_hint_x: 0.15
+							on_press: app.stop() 

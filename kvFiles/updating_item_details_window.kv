@@ -31,6 +31,7 @@
 			orientation: 'vertical'
 			spacing: 5
 			padding: 10
+			size_hint_y: 0.9
 			Label:
 				canvas.before:
 					Color:
@@ -40,9 +41,11 @@
 						size: self.size
 				id: update_item_window_
 				text: 'Update item details'
+				bold: True
+				font_size: '20sp'
 				size_hint_y: 0.1
 			BoxLayout:
-				size_hint_y: 0.8
+				size_hint_y: 0.3
 				orientation: 'vertical'
 				spacing: 5
 				id: update_item_id_row
@@ -50,18 +53,20 @@
 					orientation: 'horizontal'
 					id: choose_item_id_box_id
 					padding: 5
-					size_hint_y: 0.3
+					size_hint_y: 0.4
 					canvas.before:
 						Color:
-							rgba: 0,0.5,1,0.5
+							rgba: 0.1,0.4,0.5,0.8
+							#rgba: 0,0.5,1,0.5
 						RoundedRectangle:
 							pos: self.pos
 							size: self.size
 					Label:
 						text: 'Item ID*:'
+						size_hint_x: 0.32
 					RelativeLayout:
 						id: choose_item_id_
-						
+
 					#FloatLayout:
 					#	Spinner:
 					#		id: choose_item_id
@@ -72,22 +77,11 @@
 					#		pos_hint: {'center': (.3, .5)}
 	
 				BoxLayout:
-					orientation: 'horizontal'
-					spacing: 5
-					size_hint_y: 0.2
-					id: choose_item_id_box_id_
-					Button:
-						text: 'Show'
-						on_press:
-							if root.get_item_details(): root.ShowItemDetails() 
-					Button:
-						text: 'Back'
-						on_press: root.ReturnBack()
-					
-				BoxLayout:
 					id: update_box_template
-					padding: [5,20,5,0]
-					orientation: 'vertical'
+					padding: 5 #[5,20,5,0]
+					orientation: 'horizontal'
+					size_hint_y: 0.6
+					spacing: 8
 					canvas.before:
 						Color:
 							rgba: 0.1,0.4,0.5,1
@@ -96,25 +90,114 @@
 							size: self.size
 					Image:
 						id: update_image
-						size: self.size 
-					
-					Label:
-						id: update_item_name 
+						size_hint_x: 0.4
+						#size: self.size 
 					BoxLayout:
-						orientation: 'horizontal'
-						spacing: 10
+						orientation: 'vertical'
 						BoxLayout:
 							orientation: 'horizontal'
+							#spacing: 5
+							Label:	
+								size_hint_x: 0.3
+								text: 'Name:'
+					
 							Label:
-								text: 'ID: '
-							Label:
-								id: update_item_id
-							Label:
-								text: 'Count: '
-							Label:
-								id: update_item_number
-							Label:
-								text: 'Cost: ' 
-							Label:
-								id: update_item_cost
-				
+								id: update_item_name 
+						BoxLayout:
+							orientation: 'horizontal'
+							spacing: 10
+							BoxLayout:
+								orientation: 'horizontal'
+								Label:
+									text: 'Stock: '
+								Label:
+									id: update_item_number
+								Label:
+									text: 'Price: ' 
+								Label:
+									id: update_item_cost
+					
+			BoxLayout:
+				canvas.before:
+					Color:
+						rgba: 0.1,0.4,0.5,0.8
+					RoundedRectangle:
+						pos: self.pos
+						size: self.size
+				orientation: 'vertical'
+				padding: 5 
+				spacing: 10
+				size_hint_y: 0.52
+				id: update_item_details_data_box
+				BoxLayout:
+					orientation: 'horizontal'
+					Label:
+						text: 'New name: ' 
+						size_hint_x: 0.4
+					TextInput:
+						cursor_color: 0,0,0,1
+						id: update_item_name_new
+						hint_text: 'item name'
+				BoxLayout:
+					orientation: 'horizontal'
+					Label:
+						size_hint_x: 0.4
+						text: 'New image: ' 
+					BoxLayout:
+						orientation: 'horizontal'
+						TextInput:
+							cursor_color: 0,0,0,1
+							id: image_path
+							hint_text: 'image path'
+						Button:
+							id: camera_take_picture
+							#text: 'Camera'
+							background_normal: 'imgs/app/camera.jpg'
+							border: 0,0,0,0
+							size_hint_x: 0.3
+							on_press: root.CameraClick()
+				BoxLayout:
+					orientation: 'horizontal'
+					Label:
+						text: 'New stock: ' 
+						size_hint_x: 0.4
+					TextInput:
+						cursor_color: 0,0,0,1
+						id: update_item_number_new
+						hint_text: 'new total number of item. this will be add to old stock.'
+				BoxLayout:
+					orientation: 'horizontal'
+					Label:
+						text: 'New price: ' 
+						size_hint_x: 0.4
+					TextInput:
+						cursor_color: 0,0,0,1
+						id: update_item_cost_new
+						hint_text: 'price per item'
+			BoxLayout:
+				orientation: 'horizontal'	
+				size_hint_y: 0.08
+				spacing: 5
+				Button:
+					id: update_item_save_btn
+					text: 'Save'
+					size_hint_x: 0.2
+					on_press: root.CheckItem_Update(update_item_number_new.text, update_item_cost_new.text, update_item_name_new.text, image_path.text)
+				Button:
+					id: update_item_remove_btn
+					text: 'Remove'
+					size_hint_x: 0.22
+					on_press: root.DeleteFullItem() 
+				Button:
+					text: 'Refresh'
+					size_hint_x: 0.22
+					id: update_item_refresh_btn
+					on_press: root.RefreshScreen()
+				Button:
+					text: 'Home'
+					size_hint_x: 0.18
+					on_press: root.ReturnBack()
+				Button:
+					text: 'Quit'
+					size_hint_x: 0.18
+					on_press: app.stop()

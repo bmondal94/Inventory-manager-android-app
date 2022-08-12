@@ -47,6 +47,8 @@
 							pos: self.pos
 							size: self.size
 					text: 'Add new items'
+					bold: True
+					font_size: '20sp'
 					size_hint_y: 0.5
 				BoxLayout:
 					orientation:'vertical'
@@ -60,20 +62,25 @@
 							size: self.size
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing: 10
 						Label:
-							text: 'Item name*'
+							text: 'Name*'
+							size_hint_x: 0.4
 		
 						TextInput:
 							id: item_name
 							cursor_color: 0,0,0,1
 							text: 'test'
+							hint_text: 'item name'
 							on_text: root.CheckLength_name()
 							#multiline: False
 		
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing: 10
 						Label:
-							text: 'Item ID*'
+							text: 'ID*'
+							size_hint_x: 0.4
 		
 						BoxLayout:
 							orientation: 'horizontal'
@@ -81,15 +88,21 @@
 								id: item_id
 								cursor_color: 0,0,0,1
 								text: '1'
+								hint_text: 'unique item id'
 								on_text: root.CheckLength_id()
 							Button:
-								text: 'Generate'
+								#text: 'Generate'
+								background_normal: 'imgs/app/random2.jpg'
+								border: 0,0,0,0
+								size_hint_x: 0.2
 								on_press: root.GenerateRandomId()
 		
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing:10
 						Label:
-							text: 'Item counts'
+							text: 'Stock'
+							size_hint_x: 0.4
 		
 						TextInput:
 							id: item_numbers
@@ -98,8 +111,10 @@
 		
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing: 10
 						Label:
-							text: 'Item cost (/per item)'
+							text: 'Price (/item)'
+							size_hint_x: 0.4
 		
 						TextInput:
 							id: item_cost
@@ -108,8 +123,10 @@
 		
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing: 10
 						Label:
 							text: 'Image'
+							size_hint_x: 0.4
 						BoxLayout:
 							orientation: 'horizontal'
 							TextInput:
@@ -118,7 +135,10 @@
 								text: 'imgs/test.jpg'
 							Button:
 								id: camera_take_picture
-								text: 'Camera'	
+								background_normal: 'imgs/app/camera.jpg'
+								border: 0,0,0,0
+								#text: 'Camera'	
+								size_hint_x: 0.2
 								on_press: root.CameraClick()
 				Label:
 					canvas.before:
@@ -151,12 +171,11 @@
 							orientation: 'vertical'
 							size_hint_y: None
 							height: self.minimum_height
-							padding: [3, 3]
+							spacing: 5
 		
 				BoxLayout:
 					orientation: 'vertical'
 					spacing: 3
-					#padding: [0,3,0,0]
 					size_hint_y: 0.6
 					Button:
 						text: 'Add to bucket'
@@ -172,25 +191,36 @@
 							on_release: 
 								root.Submit()
 						Button:
-							text: 'Quit'
+							text: 'Home'
 							on_release:
 								root.manager.transition.direction = "left"
 								root.ReturnBack()
 	
-<AddItemWidgetLabel>:
-	id: add_item_widget_label
-	size_hint: (None, None)
-	size: self.texture_size
-
+						Button:
+							text: 'Quit'
+							on_press: app.stop()
 <AddItemWidgetLabelV2>:
 	orientation: 'horizontal'
 	size_hint_y: None
+	height: self.minimum_height
 	Label:
+		canvas.before:
+			Color:
+				rgba: 0.1,0.4,0.5,0.8
+			RoundedRectangle:
+				pos: self.pos
+				size: self.size
 		id: add_item_widget_label
 		size_hint: (None, None)
+		size_hint_x: 0.9 
 		size: self.texture_size
 	Button:
-		text: 'Delete'
-		#size_hint_x: 0.1
-		on_press: root.CheckoutDeleteItemFromList(add_item_widget_label.text)
+		#text: 'Delete'
+		#size_hint: (None, None)
+		size_hint_x: 0.1 
+		background_normal: 'imgs/app/delete.jpg'
+		border: 0,0,0,0
+		size: self.texture_size
+		
+		on_press: root.CheckoutDeleteItemFromList()
 
