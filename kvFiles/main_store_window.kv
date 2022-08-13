@@ -12,20 +12,8 @@
 	BoxLayout:
 		orientation:'vertical'
 		BoxLayout:
-			canvas.before:
-				Color:
-					rgba: 0,0,1,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
-			size_hint_y: 0.1
-			padding: [20,0,0,0]
-			Label:
-				text: 'Inventory Manager'
-				bold: True
-				size_hint_x: None
-				font_size: '25sp'
-				size: self.texture_size
+			size_hint_y: 0.08
+			id: heading
 		BoxLayout:
 			orientation:'vertical'
 			padding: 10
@@ -43,12 +31,12 @@
 					text: 'Main Store'
 					bold: True
 					font_size: '20sp'
-					size_hint: (1, 0.1)
+					size_hint: (1, 0.06)
 				BoxLayout:
 					orientation: 'horizontal'
 					id: search_item_id_box_id
 					padding: 5
-					size_hint_y: 0.1
+					size_hint_y: 0.06
 					canvas.before:
 						Color:
 							rgba: 0.1,0.4,0.5,0.8
@@ -63,7 +51,7 @@
 						id: search_item_id
 				ScrollView:
 					id: item_scroll
-					size_hint: (1, 0.74)
+					size_hint: (1, 0.78)
 					#bar_width: 10
 					#bar_inactive_color: 0,0,0,1
 					#scroll_type: ['bars']
@@ -75,7 +63,7 @@
 							size: self.size
 				BoxLayout:
 					orientation: 'vertical'
-					size_hint_y: 0.16
+					size_hint_y: 0.1
 					spacing: 3
 					BoxLayout:
 						orientation: 'horizontal'			
@@ -99,7 +87,7 @@
 							text: 'Delete'
 							on_press: root.DeleteItemScreen()
 						Button:
-							text: 'Print'
+							text: 'Summary'
 							on_press: root.PrintSummary()
 
 					BoxLayout:
@@ -121,7 +109,7 @@
 							size_hint_x: 0.35
 							disable: True
 						Button:
-							text: 'Check-out'
+							text: 'Checkout'
 							on_press: root.CustomerCheckOut() 
 							size_hint_x: 0.25
 							disable: True	

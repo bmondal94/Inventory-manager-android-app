@@ -1,0 +1,35 @@
+<HelpPageScreen>:
+	name: "help_page"
+
+	canvas.before:
+		Color:
+			rgba: 1,1,1,1
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	BoxLayout:
+		orientation:'vertical'
+		spacing: 10
+		BoxLayout:
+			size_hint_y: 0.08
+			id: heading
+		BoxLayout:
+			orientation:'vertical'
+			padding: 10
+			RstDocument:
+				id: help_page
+				source: 'documents/help.rst'
+				show_error: True
+			BoxLayout:
+				orientation: 'horizontal'			
+				size_hint_y: 0.05
+				spacing: 5
+				Button:
+					text: 'Close'
+					on_press: root.manager.current = app.previous_screen
+				#Button:
+				#	text: 'Home'
+				#	on_press: root.manager.current = 'all_items'
+				Button:
+					text: 'Quit'
+					on_press: app.stop()

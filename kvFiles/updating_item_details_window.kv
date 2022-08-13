@@ -13,25 +13,13 @@
 	BoxLayout:
 		orientation: 'vertical'
 		BoxLayout:
-			canvas.before:
-				Color:
-					rgba: 0,0,1,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
-			size_hint_y: 0.1
-			padding: [20,0,0,0]
-			Label:
-				text: 'Inventory Manager'
-				bold: True
-				size_hint_x: None
-				font_size: '25sp'
-				size: self.texture_size
+			id: heading
+			size_hint_y: 0.08
 		BoxLayout:
 			orientation: 'vertical'
 			spacing: 5
 			padding: 10
-			size_hint_y: 0.9
+			#size_hint_y: 0.9
 			Label:
 				canvas.before:
 					Color:
@@ -43,9 +31,9 @@
 				text: 'Update item details'
 				bold: True
 				font_size: '20sp'
-				size_hint_y: 0.1
+				size_hint_y: 0.06
 			BoxLayout:
-				size_hint_y: 0.3
+				size_hint_y: 0.2
 				orientation: 'vertical'
 				spacing: 5
 				id: update_item_id_row
@@ -53,7 +41,7 @@
 					orientation: 'horizontal'
 					id: choose_item_id_box_id
 					padding: 5
-					size_hint_y: 0.4
+					size_hint_y: 0.3
 					canvas.before:
 						Color:
 							rgba: 0.1,0.4,0.5,0.8
@@ -80,7 +68,7 @@
 					id: update_box_template
 					padding: 5 #[5,20,5,0]
 					orientation: 'horizontal'
-					size_hint_y: 0.6
+					size_hint_y: 0.7
 					spacing: 8
 					canvas.before:
 						Color:
@@ -126,11 +114,12 @@
 						size: self.size
 				orientation: 'vertical'
 				padding: 5 
-				spacing: 10
-				size_hint_y: 0.52
+				spacing: 5
+				size_hint_y: 0.5
 				id: update_item_details_data_box
 				BoxLayout:
 					orientation: 'horizontal'
+					size_hint_y: 0.15
 					Label:
 						text: 'New name: ' 
 						size_hint_x: 0.4
@@ -140,24 +129,7 @@
 						hint_text: 'item name'
 				BoxLayout:
 					orientation: 'horizontal'
-					Label:
-						size_hint_x: 0.4
-						text: 'New image: ' 
-					BoxLayout:
-						orientation: 'horizontal'
-						TextInput:
-							cursor_color: 0,0,0,1
-							id: image_path
-							hint_text: 'image path'
-						Button:
-							id: camera_take_picture
-							#text: 'Camera'
-							background_normal: 'imgs/app/camera.jpg'
-							border: 0,0,0,0
-							size_hint_x: 0.3
-							on_press: root.CameraClick()
-				BoxLayout:
-					orientation: 'horizontal'
+					size_hint_y: 0.15
 					Label:
 						text: 'New stock: ' 
 						size_hint_x: 0.4
@@ -167,6 +139,7 @@
 						hint_text: 'new total number of item. this will be add to old stock.'
 				BoxLayout:
 					orientation: 'horizontal'
+					size_hint_y: 0.15
 					Label:
 						text: 'New price: ' 
 						size_hint_x: 0.4
@@ -174,9 +147,71 @@
 						cursor_color: 0,0,0,1
 						id: update_item_cost_new
 						hint_text: 'price per item'
+				BoxLayout:
+					orientation: 'horizontal'
+					size_hint_y: 0.15
+					Label:
+						size_hint_x: 0.4
+						text: 'New image: ' 
+					BoxLayout:
+						orientation: 'horizontal'
+						spacing: 5
+						TextInput:
+							cursor_color: 0,0,0,1
+							id: image_path
+							hint_text: 'image path'
+						Button:
+							id: filechoose_picture
+							background_normal: 'imgs/app/folder.jpg'
+							border: 0,0,0,0
+							#text: 'Camera'	
+							size_hint_x: 0.3
+							on_press: root.FileChooserClick()
+						Button:
+							id: camera_take_picture
+							#text: 'Camera'
+							background_normal: 'imgs/app/camera.jpg'
+							border: 0,0,0,0
+							size_hint_x: 0.3
+							on_press: root.CameraClick()
+				BoxLayout:
+					orientation: 'horizontal'
+					size_hint_y: 0.4
+					padding: 20
+					BoxLayout:
+						size_hint_x: 0.4
+						padding: 2
+						canvas.before:
+							Color:
+								rgba: 0,0,0,1
+							Line:
+								width: 1.5
+								rounded_rectangle: self.x, self.y, self.width, self.height, 10
+						Image:
+							id: compare_old_image
+							source: update_image.source #if image_path.text else None 
+							allow_stretch: True
+							size: self.texture_size
+					Label:
+						size_hint_x: 0.2
+					BoxLayout:
+						size_hint_x: 0.4
+						padding: 2
+						canvas.before:
+							Color:
+								rgba: 0,0,0,1
+							Line:
+								width: 1.5
+								rounded_rectangle: self.x, self.y, self.width, self.height, 10
+						Image:
+							source: image_path.text 
+							allow_stretch: True
+							size: self.texture_size
+			BoxLayout:
+				size_hint_y: 0.19
 			BoxLayout:
 				orientation: 'horizontal'	
-				size_hint_y: 0.08
+				size_hint_y: 0.05
 				spacing: 5
 				Button:
 					id: update_item_save_btn

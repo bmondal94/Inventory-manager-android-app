@@ -24,6 +24,7 @@ from kivy.properties import StringProperty, ListProperty, ObjectProperty
 from kivy.uix.relativelayout import RelativeLayout
 from functools import partial
 from kivy.clock import Clock
+from kivy.utils import platform
 ##from kivy.resources import resource_add_path, resource_find
 from database import DataBase, CustomerDataBase 
 import string
@@ -31,8 +32,12 @@ import random
 import os
 import time
 import gc
-from math import isclose
 from fpdf import FPDF
+import cv2
+
+Builder.load_file('kvFiles/heading.kv')
+Builder.load_file('kvFiles/previous_screen.kv')
+Builder.load_file('kvFiles/help_page.kv')
 
 Builder.load_file('kvFiles/main_store_window.kv')
 Builder.load_file('kvFiles/each_item_box_template.kv')
@@ -44,8 +49,10 @@ Builder.load_file('kvFiles/updating_item_details_window.kv')
 Builder.load_file('kvFiles/customer_info.kv')
 Builder.load_file('kvFiles/customer_checkout.kv')
 
+Builder.load_file('kvFiles/filechooser.kv')
+
 NoCamera = True
-try:
+if platform == 'android':
     from android.permissions import request_permissions, Permission
     request_permissions([
         Permission.INTERNET,
@@ -53,14 +60,17 @@ try:
         Permission.WRITE_EXTERNAL_STORAGE,
         Permission.READ_EXTERNAL_STORAGE,
     ])
-    Builder.load_file('kvFiles/camera_window.kv')
     NoCamera = False
-except:
-    pass
+
+if not NoCamera: Builder.load_file('kvFiles/camera_window.kv')
 
 DataBaseFile = 'StoreData.db'
 db = DataBase(DataBaseFile)
 customer_db = CustomerDataBase(DataBaseFile)
+
+class Heading(BoxLayout):
+    def GoToHelp(self):
+        sm.current_screen.HelpPage()
 
 chars = string.ascii_uppercase + string.digits + string.ascii_lowercase
 def RandomId(max_limit=6, min_limit=2):
@@ -244,8 +254,43 @@ class TakePicture(Screen):
         self.ids.camera_img.play = False 
         sm.current = self.which_window
 
+class Filechooser(BoxLayout):
+    pass
+class LetsSelectFile:
+    def GetFilePath(self, filechooser, instance):
+        filepath_select = filechooser.ids.let_choose.selection[0]
+        sm.current_screen.ids.image_path.text = filepath_select
+
+    def FileChooserClick(self):
+        content = Filechooser()
+        pop = Popup(title='Choose a file',
+                      content=content,
+                      size_hint=(0.9,0.8),
+                      auto_dismiss = True)
+        content.ids.close_btn.bind(on_release=pop.dismiss)
+        content.ids.confirm_btn.bind(on_press=partial(self.GetFilePath, content))
+        content.ids.confirm_btn.bind(on_release=pop.dismiss)
+        pop.open()
+        return 
+
+class HelpPageScreen(Screen):
+    def __init__(self, **kwargs):
+        super(HelpPageScreen, self).__init__(**kwargs)
+        self.ids.heading.add_widget(Heading())
+
+    def HelpPage(self):
+        #sm.get_screen('help_page').ids.help_page.goto('additem')
+        sm.current = 'help_page'
 
 class MainStoreWindow(Screen):
+    def __init__(self, **kwargs):
+        super(MainStoreWindow, self).__init__(**kwargs)
+        self.ids.heading.add_widget(Heading())
+
+    def HelpPage(self):
+        #sm.get_screen('help_page').ids.help_page.goto('additem')
+        sm.current = 'help_page'
+
     def InitializeScreen(self):
         if 'choose_item_id' not in self.ids:
             chooser = Chooser(choiceslist=db.id_list(), hint_text='enter item name/id', size_hint=(0.5,None), height=30, pos_hint={'center_x':0.5, 'center_y':0.5})
@@ -357,6 +402,11 @@ class AddItemWindow(Screen):
     def __init__(self, **kwargs):
         super(AddItemWindow, self).__init__(**kwargs)
         self.ItemSummaryList = {}
+        self.ids.heading.add_widget(Heading())
+
+    def HelpPage(self):
+        sm.get_screen('help_page').ids.help_page.goto('additem')
+        sm.current = 'help_page'
 
     def ID_list(self):
         self.item_id_list_db = db.id_list()
@@ -416,7 +466,7 @@ class AddItemWindow(Screen):
             WrongItemPopUp('Item count and cost should be number.')
             return
 
-        if item_img_path.split('.')[-1] not in ['png', 'jpg']:
+        if item_img_path.split('.')[-1] not in ['png', 'jpg', 'jpeg']:
             WrongItemPopUp('Only png and jpeg images are allowed.')
             return
 
@@ -467,6 +517,13 @@ class AddItemWindow(Screen):
         self.image.disabled = False
         self.ids.camera_take_picture.disabled = False
 
+    def CutTexts(self, txt, max_limit = 15):
+        if len(txt) > max_limit: 
+            txt  = txt[:max_limit+1] + '...'
+        else:
+            txt = txt + '  '*(18-len(txt)) 
+        return txt
+
     def AddItemWidget(self, KEY):
         # https://stackoverflow.com/a/61707198
         scroll_vp_height = self.ids.add_item_label.viewport_size[1]
@@ -475,7 +532,7 @@ class AddItemWindow(Screen):
         label = AddItemWidgetLabelV2() 
         label.my_id = KEY
         item = self.ItemSummaryList[KEY]
-        label.ids.add_item_widget_label.text = item[0] + ':  ' + item[1] 
+        label.ids.add_item_widget_label.text = self.CutTexts(item[0]) + ':  ' + self.CutTexts(item[1]) 
         self.ids.add_item_label_box.add_widget(label)
         
         if scroll_vp_height > scroll_height:
@@ -487,6 +544,10 @@ class AddItemWindow(Screen):
         scroll_vp_height = self.ids.add_item_label.viewport_size[1]
         scroll_height = self.ids.add_item_label.height
         self.ids.add_item_label.scroll_y = bottom / (scroll_vp_height-scroll_height)
+
+    def FileChooserClick(self):
+        content = LetsSelectFile()
+        content.FileChooserClick()
 
 class AddItemWidgetLabelV2(BoxLayout):
 
@@ -500,6 +561,11 @@ class UpdateItemDetails(Screen):
 
     def __init__(self, **kwargs):
         super(UpdateItemDetails, self).__init__(**kwargs)
+        self.ids.heading.add_widget(Heading())
+
+    def HelpPage(self):
+        sm.get_screen('help_page').ids.help_page.goto('additem')
+        sm.current = 'help_page'
 
     def InitializeScreen(self):
         if 'choose_item_id' not in self.ids:
@@ -508,6 +574,10 @@ class UpdateItemDetails(Screen):
             self.ids['choose_item_id'] = chooser
         else:
             self.ids.choose_item_id.choiceslist = db.id_list()
+
+    def FileChooserClick(self):
+        content = LetsSelectFile()
+        content.FileChooserClick()
 
     def ShowItemDetails(self):
         item = db.get_item_properties(self.ids.choose_item_id.text.strip())
@@ -662,6 +732,12 @@ class CustomerCheckout(Screen):
         self.ItemSummaryList = {}
         self.TrackItemCountList = {}
         self.DoClean = True
+        self.ids.heading.add_widget(Heading())
+
+    def HelpPage(self):
+        sm.get_screen('help_page').ids.help_page.goto('additem')
+        self.DoClean = False
+        sm.current = 'help_page'
     
     def InitializeScreen(self):
         if 'choose_item_id' not in self.ids:
@@ -701,10 +777,10 @@ class CustomerCheckout(Screen):
             try:
                 discount_percent = float(discount_percent)
                 if discount_percent < 0:
-                    WrongItemPopUp('Price or discount should be postive.')
+                    WrongItemPopUp('Price and discount should be postive.')
                     return None
             except:
-                WrongItemPopUp("Price or discount should be number.")
+                WrongItemPopUp("Price and discount should be number.")
                 return None
         else:
             discount_percent = 0
@@ -788,7 +864,7 @@ class CustomerCheckout(Screen):
 
         return 1
     
-    def PopupCallBack(self, content, pop, instance):
+    def PopupCallBack(self, pop, instance):
         name =  pop.content.ids.ExtraItemCheckout_item_name.text
         count = pop.content.ids.ExtraItemCheckout_item_count.text
         price = pop.content.ids.ExtraItemCheckout_item_price.text
@@ -801,7 +877,7 @@ class CustomerCheckout(Screen):
                       content=content,
                       size_hint=(0.9,0.5),
                       auto_dismiss = False)
-        content.ids.ExtraItemCheckoutPopupBox_btn1.bind(on_press=partial(self.PopupCallBack, content, pop))
+        content.ids.ExtraItemCheckoutPopupBox_btn1.bind(on_press=partial(self.PopupCallBack, pop))
         content.ids.ExtraItemCheckoutPopupBox_btn2.bind(on_release=pop.dismiss)
         content.ids.ExtraItemCheckoutPopupBox_btn3.bind(on_press=partial(self.CleanPopupScreen, content))
         pop.open()
@@ -813,6 +889,13 @@ class CustomerCheckout(Screen):
         content.ids.ExtraItemCheckout_item_price.text = ''
         content.ids.ExtraItemCheckout_item_discount.text = ''
 
+    def CutTexts(self, txt, max_limit = 15):
+        if len(txt) > max_limit: 
+            txt  = txt[:max_limit+1] + '...'
+        else:
+            txt = txt + '  '*(max_limit+3-len(txt)) 
+        return txt
+
     def AddItemWidget(self, KEY):
         # https://stackoverflow.com/a/61707198
         scroll_vp_height = self.ids.add_item_label.viewport_size[1]
@@ -821,7 +904,7 @@ class CustomerCheckout(Screen):
         label = AddItemWidgetLabelV2() 
         label.my_id = KEY
         item = self.ItemSummaryList[KEY]
-        label.ids.add_item_widget_label.text = item[0] + ':  ' + item[1] + ' --> ' + str(item[2]) 
+        label.ids.add_item_widget_label.text = self.CutTexts(item[0], 12) + ':  ' + self.CutTexts(item[1], 12) + ' --> ' + self.CutTexts(str(item[2]), 6)
         self.ids.add_item_label_box.add_widget(label)
         
         if scroll_vp_height > scroll_height:
@@ -866,10 +949,17 @@ class SetExtraItemCheckoutPopupBox(BoxLayout):
     pass
 
 class CustomerInfoScreen(Screen):
+    def __init__(self, **kwargs):
+        super(CustomerInfoScreen, self).__init__(**kwargs)
+        self.ids.heading.add_widget(Heading())
+
+    def HelpPage(self):
+        sm.get_screen('help_page').ids.help_page.goto('additem')
+        sm.current = 'help_page'
 
     def InitializeScreen(self):
         if 'choose_customer_id' not in self.ids:
-            chooser = Chooser(choiceslist=customer_db.id_list(), hint_text='customer name/id', size_hint=(0.5,None), pos_hint={'center_x':0.5, 'center_y':0.5})
+            chooser = Chooser(choiceslist=customer_db.id_list(), hint_text='customer name/id', pos_hint={'center_x':0.5, 'center_y':0.5})
             self.ids.customer_id.add_widget(chooser)
             self.ids['choose_customer_id'] = chooser
         else:
@@ -1043,6 +1133,7 @@ class CustomerInfoScreen(Screen):
     def Quit(self):
         self.CleanFields()
         sm.get_screen('customer_checkout').ids.add_item_label_box.clear_widgets()
+        sm.get_screen('customer_checkout').DoClean = True
         sm.current = 'all_items'
 
     def BackToCheckoutItem(self):
@@ -1123,13 +1214,16 @@ class WindowManager(ScreenManager):
 
 sm = WindowManager()
 
-screens = [ MainStoreWindow(name="all_items"), 
+screens = [ 
+            MainStoreWindow(name="all_items"), 
             AddItemWindow(name='new_item_add'), 
             UpdateItemDetails(name='details_update'), 
             #UpdateItemDetails(name='delete_item'), 
             CustomerInfoScreen(name='customer_info'), 
             CustomerCheckout(name='customer_checkout'), 
-            TakePicture(name='take_picture')]
+            TakePicture(name='take_picture'),
+            HelpPageScreen(name='help_page')
+            ]
 
 for screen in screens:
     sm.add_widget(screen)
@@ -1137,6 +1231,7 @@ for screen in screens:
 class InventoryManagerApp(App):
     def __init__(self, **kwargs):
         super(InventoryManagerApp, self).__init__(**kwargs)
+        self.previous_screen = "" 
 
     @property
     def storage_path(self):

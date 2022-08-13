@@ -18,20 +18,8 @@
 	BoxLayout:
 		orientation:'vertical'
 		BoxLayout:
-			canvas.before:
-				Color:
-					rgba: 0,0,1,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
-			size_hint_y: 0.1
-			padding: [20,0,0,0]
-			Label:
-				text: 'Inventory Manager'
-				bold: True
-				size_hint_x: None
-				font_size: '25sp'
-				size: self.texture_size
+			id: heading
+			size_hint_y: 0.08
 
 		BoxLayout:	
 			orientation: 'vertical'
@@ -39,6 +27,7 @@
 			BoxLayout:
 				orientation: 'vertical'
 				spacing: 5
+					
 				Label:
 					canvas.before:
 						Color:
@@ -49,11 +38,12 @@
 					text: 'Add new items'
 					bold: True
 					font_size: '20sp'
-					size_hint_y: 0.5
+					size_hint_y: 0.06
 				BoxLayout:
 					orientation:'vertical'
 					padding: 5
-					size_hint_y: 1.5
+					size_hint_y: 0.3
+					spacing: 5
 					canvas.before:
 						Color:
 							rgba: 0.1,0.4,0.5,0.8
@@ -84,6 +74,7 @@
 		
 						BoxLayout:
 							orientation: 'horizontal'
+							spacing:2
 							TextInput:
 								id: item_id
 								cursor_color: 0,0,0,1
@@ -129,10 +120,18 @@
 							size_hint_x: 0.4
 						BoxLayout:
 							orientation: 'horizontal'
+							spacing:2
 							TextInput:
 								id: image_path
 								cursor_color: 0,0,0,1
 								text: 'imgs/test.jpg'
+							Button:
+								id: filechoose_picture
+								background_normal: 'imgs/app/folder.jpg'
+								border: 0,0,0,0
+								#text: 'Camera'	
+								size_hint_x: 0.2
+								on_press: root.FileChooserClick()
 							Button:
 								id: camera_take_picture
 								background_normal: 'imgs/app/camera.jpg'
@@ -140,16 +139,34 @@
 								#text: 'Camera'	
 								size_hint_x: 0.2
 								on_press: root.CameraClick()
-				Label:
-					canvas.before:
-						Color:
-							rgba: 0.1,0.4,0.5,1
-						RoundedRectangle:
-							pos: self.pos
-							size: self.size
-					text: ' - "*" is mandatory. \n- The default item count is 0. \n- The default item cost is 0. \n- The default image path is test.jpg .\n- Multiple item can be added.'
-					#size_hint: None, None
-					size: self.texture_size
+				BoxLayout:
+					orientation: 'horizontal'
+					size_hint_y: 0.2
+					spacing: 10	
+					Label:
+						canvas.before:
+							Color:
+								rgba: 0.1,0.4,0.5,1
+							RoundedRectangle:
+								pos: self.pos
+								size: self.size
+						text: ' - "*" is mandatory. \n- Default stock is 0. \n- Default price is 0. \n- Default image is test.jpg .\n- Multiple item can be added.'
+						#size_hint: None, None
+						size_hint_x: 0.67
+						size: self.texture_size
+					BoxLayout:
+						size_hint_x: 0.33
+						padding: 2
+						canvas.before:
+							Color:
+								rgba: 0.1,0.4,0.5,1
+							Line:
+								width: 1.5
+								rounded_rectangle: self.x, self.y, self.width, self.height, 10
+						Image:
+							source: image_path.text 
+							allow_stretch: True
+							size: self.texture_size
 		
 				BoxLayout:
 					orientation: 'vertical'
@@ -160,6 +177,7 @@
 							pos: self.pos
 							size: self.size
 					padding: [5, 5]
+					size_hint_y: 0.34
 					Label:
 						text: 'Items added: '
 						size_hint: (None, None)
@@ -176,7 +194,7 @@
 				BoxLayout:
 					orientation: 'vertical'
 					spacing: 3
-					size_hint_y: 0.6
+					size_hint_y: 0.1
 					Button:
 						text: 'Add to bucket'
 						size_hint_y: 0.025
@@ -202,7 +220,8 @@
 <AddItemWidgetLabelV2>:
 	orientation: 'horizontal'
 	size_hint_y: None
-	height: self.minimum_height
+	height: self.minimum_height 
+	spacing: 10
 	Label:
 		canvas.before:
 			Color:
@@ -211,13 +230,10 @@
 				pos: self.pos
 				size: self.size
 		id: add_item_widget_label
-		size_hint: (None, None)
-		size_hint_x: 0.9 
+		size_hint: (0.9, None)
 		size: self.texture_size
 	Button:
-		#text: 'Delete'
-		#size_hint: (None, None)
-		size_hint_x: 0.1 
+		size_hint_x: 0.06
 		background_normal: 'imgs/app/delete.jpg'
 		border: 0,0,0,0
 		size: self.texture_size

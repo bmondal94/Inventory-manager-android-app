@@ -1,0 +1,20 @@
+<Filechooser>:
+	size: root.size
+	pos: root.pos
+	orientation: 'vertical'
+	spacing: 10
+	FileChooserIconView:
+		id: let_choose
+		filters: ['*.png', '*.jpg', '*.jpeg']
+		multiselect: False
+	BoxLayout:
+		spacing: 5
+		orientation: 'horizontal'
+		size_hint_y: 0.05
+		Button:
+			id: close_btn
+			text:'close'
+		Button:
+			id: confirm_btn
+			text:'confirm'
+			

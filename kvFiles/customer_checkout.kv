@@ -1,5 +1,5 @@
 <CustomerCheckout>:
-	name: 'cuatomer_checkout'
+	name: 'customer_checkout'
 	#choose_item_id: choose_item_id
 
 	on_pre_enter: root.InitializeScreen()
@@ -13,25 +13,13 @@
 	BoxLayout:
 		orientation: 'vertical'
 		BoxLayout:
-			canvas.before:
-				Color:
-					rgba: 0,0,1,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
-			size_hint_y: 0.1
-			padding: [20,0,0,0]
-			Label:
-				text: 'Inventory Manager'
-				bold: True
-				size_hint_x: None
-				font_size: '25sp'
-				size: self.texture_size
+			size_hint_y: 0.08
+			id: heading
 		BoxLayout:
 			orientation: 'vertical'
 			spacing: 5
 			padding: 10
-			size_hint_y: 0.9
+			#size_hint_y: 0.92
 			Label:
 				canvas.before:
 					Color:
