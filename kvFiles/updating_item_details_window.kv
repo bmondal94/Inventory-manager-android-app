@@ -160,6 +160,7 @@
 							cursor_color: 0,0,0,1
 							id: image_path
 							hint_text: 'image path'
+							on_focus: new_image_path_here.source = image_path.text.strip();compare_old_image.source = update_image.source
 						Button:
 							id: filechoose_picture
 							background_normal: 'imgs/app/folder.jpg'
@@ -189,7 +190,7 @@
 								rounded_rectangle: self.x, self.y, self.width, self.height, 10
 						Image:
 							id: compare_old_image
-							source: update_image.source #if image_path.text else None 
+							source:
 							allow_stretch: True
 							size: self.texture_size
 					Label:
@@ -204,7 +205,8 @@
 								width: 1.5
 								rounded_rectangle: self.x, self.y, self.width, self.height, 10
 						Image:
-							source: image_path.text 
+							id: new_image_path_here
+							source:
 							allow_stretch: True
 							size: self.texture_size
 			BoxLayout:

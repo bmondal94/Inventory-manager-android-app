@@ -124,7 +124,9 @@
 							TextInput:
 								id: image_path
 								cursor_color: 0,0,0,1
-								text: 'imgs/test.jpg'
+								text: 
+								hint_text: 'image path. default is imgs/test.jpg'
+								on_focus: lets_choose_file.source = image_path.text.strip()
 							Button:
 								id: filechoose_picture
 								background_normal: 'imgs/app/folder.jpg'
@@ -164,7 +166,8 @@
 								width: 1.5
 								rounded_rectangle: self.x, self.y, self.width, self.height, 10
 						Image:
-							source: image_path.text 
+							id: lets_choose_file
+							source: 
 							allow_stretch: True
 							size: self.texture_size
 		

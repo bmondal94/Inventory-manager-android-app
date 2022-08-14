@@ -79,7 +79,7 @@
 							text: 'Item:'
 						Button:
 							text: 'Add'
-							on_press: root.AddItemBtn()
+							on_press: root.manager.current = 'new_item_add' #AddItemBtn()
 						Button:
 							text: 'Update'
 							on_press: root.DetailsUpdateScreen()

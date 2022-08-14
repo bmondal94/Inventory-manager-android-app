@@ -27,13 +27,13 @@ from kivy.clock import Clock
 from kivy.utils import platform
 ##from kivy.resources import resource_add_path, resource_find
 from database import DataBase, CustomerDataBase 
+from update_settings import  update_settings
 import string
 import random
 import os
 import time
 import gc
 from fpdf import FPDF
-import cv2
 
 Builder.load_file('kvFiles/heading.kv')
 Builder.load_file('kvFiles/previous_screen.kv')
@@ -64,13 +64,14 @@ if platform == 'android':
 
 if not NoCamera: Builder.load_file('kvFiles/camera_window.kv')
 
-DataBaseFile = 'StoreData.db'
-db = DataBase(DataBaseFile)
-customer_db = CustomerDataBase(DataBaseFile)
-
 class Heading(BoxLayout):
+    def __init__(self, sm, **kwargs):
+        super(Heading, self).__init__(**kwargs)
+        self.sm = sm
+
     def GoToHelp(self):
-        sm.current_screen.HelpPage()
+        self.sm.current_screen.HelpPage()
+    
 
 chars = string.ascii_uppercase + string.digits + string.ascii_lowercase
 def RandomId(max_limit=6, min_limit=2):
@@ -92,7 +93,7 @@ def WrongItemPopUp(popup_text):
 class Chooser(TextInput):
     choiceslist = ListProperty([])
 
-    def __init__(self, **kwargs):
+    def __init__(self, sm, **kwargs):
         self.choiceslist = kwargs.pop('choiceslist', [])  # list of choices
         super(Chooser, self).__init__(**kwargs)
         self.multiline = False
@@ -103,6 +104,7 @@ class Chooser(TextInput):
         self.bind(focus=self.on_focus)
         self.dropdown = None
         self.suggestion_text = None
+        self.sm = sm
 
     def open_dropdown(self, *args):
         if self.dropdown:
@@ -153,11 +155,16 @@ class Chooser(TextInput):
         if self.dropdown:
             self.dropdown.dismiss()
             self.dropdown = None
-        sm.current_screen.ShowItemDetails()
+        self.sm.current_screen.ShowItemDetails()
 
 class ItemBoxTemplate(BoxLayout):
+    def __init__(self,db,sm,**kwargs):
+        super(ItemBoxTemplate, self).__init__(**kwargs)
+        self.db = db
+        self.sm = sm
+
     def PopupCallBack(self, instance):
-        db.DeleteItem(self.ids.item_id.text)
+        self.db.DeleteItem(self.ids.item_id.text)
         self.parent.remove_widget(self)
 
     def PopUp(self, popup_text):
@@ -180,9 +187,9 @@ class ItemBoxTemplate(BoxLayout):
             except:
                 self.PopUp("Can't delete image. Do you want to force delete?")
                 return
-        db.DeleteItem(self.ids.item_id.text)
+        self.db.DeleteItem(self.ids.item_id.text)
         self.parent.remove_widget(self)
-        sm.current_screen.ids.choose_item_id.choiceslist = db.id_list()
+        self.sm.current_screen.ids.choose_item_id.choiceslist = self.db.id_list()
         return
 
     def ValidateEnteredItemNumber(self, new_item_numbers):
@@ -199,52 +206,53 @@ class ItemBoxTemplate(BoxLayout):
         if self.CheckCountNegative:
             WrongItemPopUp("Item stock already empty.")
         else:
-            db.update_item_count(self.ids.item_id.text, self.updated_item_numbers)
+            self.db.update_item_count(self.ids.item_id.text, self.updated_item_numbers)
             self.ids.item_number.text = str(self.updated_item_numbers)
         return 1
 
     def buttonAddClicked(self, item_id, new_item_numbers):
         new_item_numbers = self.ValidateEnteredItemNumber(new_item_numbers)
         if new_item_numbers > 0:
-            self.updated_item_numbers, self.CheckCountNegative = db.validate_item_count(item_id, new_item_numbers, action='Add')
+            self.updated_item_numbers, self.CheckCountNegative = self.db.validate_item_count(item_id, new_item_numbers, action='Add')
             self.CheckNegativeCount() 
             self.ids.NumberOfItems.text = '1'
 
     def buttonDeleteClicked(self, item_id, new_item_numbers):
         new_item_numbers = self.ValidateEnteredItemNumber(new_item_numbers)
         if new_item_numbers > 0:
-            self.updated_item_numbers, self.CheckCountNegative = db.validate_item_count(item_id, new_item_numbers, action='Delete')
+            self.updated_item_numbers, self.CheckCountNegative = self.db.validate_item_count(item_id, new_item_numbers, action='Delete')
             self.CheckNegativeCount()
             self.ids.NumberOfItems.text = '1'
         
     def DetailsUpdateScreen(self):
-        get_screen_ids = sm.get_screen('details_update').ids
+        get_screen_ids = self.sm.get_screen('details_update').ids
         get_screen_ids.update_item_window_.text = 'Update item details'
         get_screen_ids.update_item_remove_btn.disabled = True 
         get_screen_ids.update_item_save_btn.disabled = False
-        sm.current = 'details_update'
+        self.sm.current = 'details_update'
         get_screen_ids.choose_item_id.text = self.ids.item_id.text
         get_screen_ids.choose_item_id_box_id.disabled = True
         get_screen_ids.update_item_details_data_box.disabled = False
         #if sm.current_screen.get_item_details():
-        sm.current_screen.ShowItemDetails()
+        self.sm.current_screen.ShowItemDetails()
 
 class TakePicture(Screen):
 
-    def __init__(self, **kwargs):
+    def __init__(self, sm, **kwargs):
         super(TakePicture, self).__init__(**kwargs)
         self.which_window = 'new_item_add'
+        self.sm = sm
 
     def SaveImage(self):
         timestr = time.strftime("%Y%m%d_%H%M%S")
-        self.image_pathh = os.path.join(App.get_running_app().storage_path, "IMG_{}.jpg".format(timestr))
+        self.image_pathh = os.path.join(App.get_running_app().image_storage_path, "IMG_{}.jpg".format(timestr))
         iimg = self.ids.camera_img.export_as_image()
         iimg.save(self.image_pathh)
         ##self.ids.camera_img.export_to_png(self.image_pathh)
         self.NewImagePathUpdate(self.which_window)
 
     def NewImagePathUpdate(self, which_window_):
-        all_ids_in_path = sm.get_screen(which_window_).ids
+        all_ids_in_path = self.sm.get_screen(which_window_).ids
         #if which_window_ == 'details_update': all_ids_in_path = all_ids_in_path.update_item_box_template.ids
         all_ids_in_path.image_path.text = self.image_pathh
         all_ids_in_path.image_path.disabled = True
@@ -252,14 +260,19 @@ class TakePicture(Screen):
 
     def ReturnBack(self):
         self.ids.camera_img.play = False 
-        sm.current = self.which_window
+        self.sm.current = self.which_window
+        self.sm.current_screen.ids.image_path.focus = not self.sm.current_screen.ids.image_path.focus
 
 class Filechooser(BoxLayout):
     pass
 class LetsSelectFile:
+    def __init__(self, sm, **kwargs):
+        self.sm = sm
+
     def GetFilePath(self, filechooser, instance):
         filepath_select = filechooser.ids.let_choose.selection[0]
-        sm.current_screen.ids.image_path.text = filepath_select
+        self.sm.current_screen.ids.image_path.text = filepath_select
+        self.sm.current_screen.ids.image_path.focus = not self.sm.current_screen.ids.image_path.focus
 
     def FileChooserClick(self):
         content = Filechooser()
@@ -274,30 +287,33 @@ class LetsSelectFile:
         return 
 
 class HelpPageScreen(Screen):
-    def __init__(self, **kwargs):
+    def __init__(self,sm,**kwargs):
         super(HelpPageScreen, self).__init__(**kwargs)
-        self.ids.heading.add_widget(Heading())
+        self.sm = sm
+        self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
         #sm.get_screen('help_page').ids.help_page.goto('additem')
-        sm.current = 'help_page'
+        self.sm.current = 'help_page'
 
 class MainStoreWindow(Screen):
-    def __init__(self, **kwargs):
+    def __init__(self, db, sm, **kwargs):
         super(MainStoreWindow, self).__init__(**kwargs)
-        self.ids.heading.add_widget(Heading())
+        self.db = db
+        self.sm = sm
+        self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
         #sm.get_screen('help_page').ids.help_page.goto('additem')
-        sm.current = 'help_page'
+        self.sm.current = 'help_page'
 
     def InitializeScreen(self):
         if 'choose_item_id' not in self.ids:
-            chooser = Chooser(choiceslist=db.id_list(), hint_text='enter item name/id', size_hint=(0.5,None), height=30, pos_hint={'center_x':0.5, 'center_y':0.5})
+            chooser = Chooser(self.sm,choiceslist=self.db.id_list(), hint_text='enter item name/id', size_hint=(0.5,None), height=30, pos_hint={'center_x':0.5, 'center_y':0.5})
             self.ids.search_item_id.add_widget(chooser)
             self.ids['choose_item_id'] = chooser
         else:
-            self.ids.choose_item_id.choiceslist = db.id_list()
+            self.ids.choose_item_id.choiceslist = self.db.id_list()
             self.ids.choose_item_id.text = ''
 
     def ShowItemDetails(self):
@@ -313,7 +329,7 @@ class MainStoreWindow(Screen):
     def ShowItemTemplates(self):
         self.AllItemGridLayout()
         for item in self.items:
-            InstantItemBoxTemplate = ItemBoxTemplate()
+            InstantItemBoxTemplate = ItemBoxTemplate(self.db, self.sm)
             self.layout.ids[item[0]+'MainStore'] = InstantItemBoxTemplate
             InstantItemBoxTemplate.ids.item_id.text = item[0]
             InstantItemBoxTemplate.ids.item_name.text = item[1]
@@ -323,29 +339,29 @@ class MainStoreWindow(Screen):
             self.layout.add_widget(InstantItemBoxTemplate)
 
     def AddItemBtn(self):
-        sm.current = 'new_item_add'
+        self.sm.current = 'new_item_add'
 
     def DetailsUpdateScreen(self):
-        get_screen_ids = sm.get_screen('details_update').ids
+        get_screen_ids = self.sm.get_screen('details_update').ids
         get_screen_ids.update_item_window_.text = 'Update item details'
         get_screen_ids.update_item_remove_btn.disabled = True 
         get_screen_ids.update_item_refresh_btn.disabled = False 
         get_screen_ids.choose_item_id_box_id.disabled = False
         get_screen_ids.update_item_save_btn.disabled = False
         get_screen_ids.update_item_details_data_box.disabled = False
-        sm.current = 'details_update'
+        self.sm.current = 'details_update'
 
     def DeleteItemScreen(self):
-        get_screen_ids = sm.get_screen('details_update').ids
+        get_screen_ids = self.sm.get_screen('details_update').ids
         get_screen_ids.update_item_window_.text = 'Delete item'
         get_screen_ids.update_item_save_btn.disabled = True 
         get_screen_ids.update_item_details_data_box.disabled = True
         get_screen_ids.update_item_remove_btn.disabled = False 
         get_screen_ids.update_item_refresh_btn.disabled = True
-        sm.current = 'details_update'
+        self.sm.current = 'details_update'
 
     def PrintSummary(self):
-        self.summary_items = db.ReturnAllItems()
+        self.summary_items = self.db.ReturnAllItems()
         if self.summary_items:
             # Create a popup for orientation
             pdf = FPDF(orientation='P', unit='mm', format='A4')
@@ -377,19 +393,19 @@ class MainStoreWindow(Screen):
                 #row_item = ''.join([str(col).strip().rjust(20) + " " for  col in item])
                 #pdf.cell(0, 10, txt = row_item, ln=1, align='C')
 
-            filepath_pdf = 'ItemsSummary_'+time.strftime("%Y%m%d_%H%M%S")+'.pdf'
+            filepath_pdf = os.path.join(App.get_running_app().save_documents_dir, 'ItemsSummary_'+time.strftime("%Y%m%d_%H%M%S")+'.pdf')
             pdf.output(filepath_pdf)
             WrongItemPopUp(f"Items summary: {filepath_pdf}")
         else:
             WrongItemPopUp("No item exists.")
 
     def CustomerInfoPage(self):
-        sm.current = 'customer_info'
-        sm.current_screen.ids.checkout_button.disabled = True
-        sm.current_screen.ids.checkout_back_button.disabled = True
+        self.sm.current = 'customer_info'
+        self.sm.current_screen.ids.checkout_button.disabled = True
+        self.sm.current_screen.ids.checkout_back_button.disabled = True
 
     def CustomerCheckOut(self):
-        sm.current = 'customer_checkout'
+       self.sm.current = 'customer_checkout'
 
 
 class AddItemWindow(Screen):
@@ -399,17 +415,19 @@ class AddItemWindow(Screen):
     item_cost = ObjectProperty()
     image = ObjectProperty()
 
-    def __init__(self, **kwargs):
+    def __init__(self, db, sm, **kwargs):
         super(AddItemWindow, self).__init__(**kwargs)
         self.ItemSummaryList = {}
-        self.ids.heading.add_widget(Heading())
+        self.db = db
+        self.sm = sm
+        self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
-        sm.get_screen('help_page').ids.help_page.goto('additem')
-        sm.current = 'help_page'
+        self.sm.get_screen('help_page').ids.help_page.goto('additem')
+        self.sm.current = 'help_page'
 
     def ID_list(self):
-        self.item_id_list_db = db.id_list()
+        self.item_id_list_db = self.db.id_list()
         return 
 
     def GenerateRandomId(self):
@@ -420,8 +438,8 @@ class AddItemWindow(Screen):
             WrongItemPopUp('Need camera permission. Enable camera permission from phone settings for this app.')
             self.ids.camera_take_picture.disabled = True
         else:
-            sm.get_screen('take_picture').which_window = 'new_item_add'
-            sm.current = 'take_picture'
+            self.sm.get_screen('take_picture').which_window = 'new_item_add'
+            self.sm.current = 'take_picture'
 
     def CheckLength_name(self, max_length = 20):
         if len(self.ids.item_name.text.strip()) > max_length:
@@ -439,7 +457,7 @@ class AddItemWindow(Screen):
         self.item_cost.text.strip(), self.image.text.strip()
 
         #check_item_id_database = True if item_id in self.item_id_list_db else False
-        check_item_id_database = db.check_item_eligibility(item_id)
+        check_item_id_database = self.db.check_item_eligibility(item_id)
 
         if not item_id:
             WrongItemPopUp('Item id is mandatory. Supply an appropriate unique item id.')
@@ -482,7 +500,7 @@ class AddItemWindow(Screen):
 
     def Submit(self):
         if len(self.ItemSummaryList) > 0:
-            db.add_new_items(list(self.ItemSummaryList.values()))
+            self.db.add_new_items(list(self.ItemSummaryList.values()))
             self.add_new_item_widget_main_store()
             self.ReturnBack()
         else:
@@ -490,10 +508,10 @@ class AddItemWindow(Screen):
         return 
 
     def add_new_item_widget_main_store(self):
-        get_all_items_screen_grid = sm.get_screen('all_items').ids.items_grid_layout
+        get_all_items_screen_grid = self.sm.get_screen('all_items').ids.items_grid_layout
         for item_ii in self.ItemSummaryList:
             item_i = self.ItemSummaryList[item_ii]
-            InstantItemBoxTemplate = ItemBoxTemplate()
+            InstantItemBoxTemplate = ItemBoxTemplate(self.db, self.sm)
             InstantItemBoxTemplate.ids.item_id.text = item_i[0]
             InstantItemBoxTemplate.ids.item_name.text = item_i[1]
             InstantItemBoxTemplate.ids.item_number.text = str(item_i[2])
@@ -505,7 +523,7 @@ class AddItemWindow(Screen):
     def ReturnBack(self):
         self.ItemSummaryList.clear()
         self.reset()
-        sm.current = "all_items"
+        self.sm.current = "all_items"
         self.ids.add_item_label_box.clear_widgets()
 
     def reset(self):
@@ -513,9 +531,10 @@ class AddItemWindow(Screen):
         self.item_namee.text = ''
         self.item_number.text = '0'
         self.item_cost.text = '0'
-        self.image.text = 'imgs/test.jpg'
+        self.image.text = ' '
         self.image.disabled = False
         self.ids.camera_take_picture.disabled = False
+        self.ids.lets_choose_file.source = ''
 
     def CutTexts(self, txt, max_limit = 15):
         if len(txt) > max_limit: 
@@ -529,7 +548,7 @@ class AddItemWindow(Screen):
         scroll_vp_height = self.ids.add_item_label.viewport_size[1]
         scroll_height = self.ids.add_item_label.height
 
-        label = AddItemWidgetLabelV2() 
+        label = AddItemWidgetLabelV2(self.sm) 
         label.my_id = KEY
         item = self.ItemSummaryList[KEY]
         label.ids.add_item_widget_label.text = self.CutTexts(item[0]) + ':  ' + self.CutTexts(item[1]) 
@@ -546,41 +565,45 @@ class AddItemWindow(Screen):
         self.ids.add_item_label.scroll_y = bottom / (scroll_vp_height-scroll_height)
 
     def FileChooserClick(self):
-        content = LetsSelectFile()
+        content = LetsSelectFile(self.sm)
         content.FileChooserClick()
 
 class AddItemWidgetLabelV2(BoxLayout):
-
+    def __init__(self, sm, **kwargs):
+        super(AddItemWidgetLabelV2, self).__init__(**kwargs)
+        self.sm = sm
     def CheckoutDeleteItemFromList(self):
         # Do not change the order. The function should be called exactly in this order.
-        sm.current_screen.UpdateLists(self.my_id)
-        sm.current_screen.ItemSummaryList.pop(self.my_id)
+        self.sm.current_screen.UpdateLists(self.my_id)
+        self.sm.current_screen.ItemSummaryList.pop(self.my_id)
         self.parent.remove_widget(self)
 
 class UpdateItemDetails(Screen):
 
-    def __init__(self, **kwargs):
+    def __init__(self, db, sm, **kwargs):
         super(UpdateItemDetails, self).__init__(**kwargs)
-        self.ids.heading.add_widget(Heading())
+        self.db = db
+        self.sm = sm
+        self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
-        sm.get_screen('help_page').ids.help_page.goto('additem')
-        sm.current = 'help_page'
+        self.sm.get_screen('help_page').ids.help_page.goto('additem')
+        self.sm.current = 'help_page'
 
     def InitializeScreen(self):
         if 'choose_item_id' not in self.ids:
-            chooser = Chooser(choiceslist=db.id_list(), hint_text='enter item name/id', size_hint=(0.5,None), height=30, pos_hint={'center_x':0.5, 'center_y':0.5})
+            chooser = Chooser(self.sm, choiceslist=self.db.id_list(), hint_text='enter item name/id', size_hint=(0.5,None), height=30, pos_hint={'center_x':0.5, 'center_y':0.5})
             self.ids.choose_item_id_.add_widget(chooser)
             self.ids['choose_item_id'] = chooser
         else:
-            self.ids.choose_item_id.choiceslist = db.id_list()
+            self.ids.choose_item_id.choiceslist = self.db.id_list()
 
     def FileChooserClick(self):
-        content = LetsSelectFile()
+        content = LetsSelectFile(self.sm)
         content.FileChooserClick()
 
     def ShowItemDetails(self):
-        item = db.get_item_properties(self.ids.choose_item_id.text.strip())
+        item = self.db.get_item_properties(self.ids.choose_item_id.text.strip())
         self.ids.update_item_name.text = item[1]
         self.ids.update_item_number.text = str(item[2])
         self.ids.update_item_cost.text = str(item[3])
@@ -615,7 +638,7 @@ class UpdateItemDetails(Screen):
     def CheckItem_Update(self, new_stock, new_cost, new_name, new_image):
         item_id = self.ids.choose_item_id.text.strip()
         if len(item_id) > 1:
-            item = db.get_item_properties(item_id)
+            item = self.db.get_item_properties(item_id)
             if item is None:
                 WrongItemPopUp('Item id does not exist.')
                 self.ResetDetails()
@@ -626,15 +649,18 @@ class UpdateItemDetails(Screen):
             return
         new_name = None if len(new_name.strip())<1 else new_name.strip()
         new_image = None if len(new_image.strip())<1 else new_image.strip()
-        new_item_details = [new_name, item[2]+self.CheckNumericStock(new_stock), self.CheckNumericCost(new_cost), new_image, item[0]]
+        new_item_details = [new_name, self.CheckNumericStock(new_stock), self.CheckNumericCost(new_cost), new_image, item[0]]
         if all(x is None for x in new_item_details[:-1]):
             WrongItemPopUp('Nothing to save.')
         else:
             for i, x in enumerate(new_item_details[:-1]):
-               if x is None: new_item_details[i] = item[i+1]
+                if x is None: 
+                    new_item_details[i] = item[i+1]
+                elif i == 1:
+                    new_item_details[i] += item[2]
 
             # Updating database and main window widgets
-            db.UpdateNewItemDetails(tuple(new_item_details))
+            self.db.UpdateNewItemDetails(tuple(new_item_details))
             self.update_item_widget_main_store(new_item_details)
             WrongItemPopUp("Update sucessful.")
             self.RefreshScreen()
@@ -643,7 +669,7 @@ class UpdateItemDetails(Screen):
         return
 
     def update_item_widget_main_store(self, new_item):
-        get_all_items_screen_grid = sm.get_screen('all_items').ids.items_grid_layout
+        get_all_items_screen_grid = self.sm.get_screen('all_items').ids.items_grid_layout
         need_update_ids = get_all_items_screen_grid.ids[new_item[-1]+'MainStore'].ids
         need_update_ids.item_name.text = new_item[0]
         need_update_ids.item_number.text = str(new_item[1])
@@ -654,7 +680,7 @@ class UpdateItemDetails(Screen):
         self.ResetDetails()
         self.ids.choose_item_id.text = ''
         self.RefreshScreen()
-        sm.current = 'all_items'
+        self.sm.current = 'all_items'
 
     def ResetDetails(self):
         self.ids.update_item_name.text = ''
@@ -664,25 +690,27 @@ class UpdateItemDetails(Screen):
 
     def RefreshScreen(self):
         self.ids.update_item_name_new.text = ''
-        self.ids.image_path.text = ''
+        self.ids.image_path.text = ' '
         self.ids.update_item_number_new.text = ''
         self.ids.update_item_cost_new.text = ''
         self.ids.camera_take_picture.disabled = False
+        self.ids.new_image_path_here.source = ''
+        self.ids.compare_old_image.source = ''
 
     def CameraClick(self):
         if NoCamera:
             WrongItemPopUp('Need camera permission. Enable camera permission from phone settings for this app.')
             self.ids.camera_take_picture.disabled = True
         else:
-            sm.get_screen('take_picture').which_window = 'details_update'
-            sm.current = 'take_picture'
+            self.sm.get_screen('take_picture').which_window = 'details_update'
+            self.sm.current = 'take_picture'
 
     def delete_item_widget_main_store(self, item_id):
-        get_all_items_screen_grid = sm.get_screen('all_items').ids.items_grid_layout
+        get_all_items_screen_grid = self.sm.get_screen('all_items').ids.items_grid_layout
         get_all_items_screen_grid.remove_widget(get_all_items_screen_grid.ids[item_id+'MainStore'])
 
     def DeleteThings(self, item_id, item_name):
-        db.DeleteItem(item_id)
+        self.db.DeleteItem(item_id)
         self.delete_item_widget_main_store(item_id)
         self.ids.choose_item_id.choiceslist.remove((item_id, item_id))
         self.ids.choose_item_id.choiceslist.remove((item_name, item_id))
@@ -690,16 +718,16 @@ class UpdateItemDetails(Screen):
         self.ids.choose_item_id.text = ''
         WrongItemPopUp("Delete sucessful.")
 
-    def PopupCallBackDeleteItemWindow(self, item_id, instance):
-        self.DeleteThings(item_id)
+    def PopupCallBackDeleteItemWindow(self, item_id, item_name, instance):
+        self.DeleteThings(item_id, item_name)
 
-    def PopUpDeleteItemWindow(self, popup_text, item_id):
+    def PopUpDeleteItemWindow(self, popup_text, item_id, item_name):
         content = SetCustomerPopupBox()  
         pop = Popup(title=popup_text,
                       content=content,
                       size_hint=(0.5,0.5),
                       auto_dismiss = False)
-        content.ids.CustomerPopupBox_btn1.bind(on_press=partial(self.PopupCallBackDeleteItemWindow, item_id))
+        content.ids.CustomerPopupBox_btn1.bind(on_press=partial(self.PopupCallBackDeleteItemWindow, item_id, item_name))
         content.ids.CustomerPopupBox_btn1.bind(on_release=pop.dismiss)
         content.ids.CustomerPopupBox_btn2.bind(on_release= pop.dismiss)
         pop.open()
@@ -708,7 +736,7 @@ class UpdateItemDetails(Screen):
     def DeleteFullItem(self):
         item_id = self.ids.choose_item_id.text.strip()
         if len(item_id) > 1:
-            item = db.get_item_properties(item_id)
+            item = self.db.get_item_properties(item_id)
             if item is None:
                 WrongItemPopUp('Item id does not exist.')
                 self.ResetDetails()
@@ -721,37 +749,39 @@ class UpdateItemDetails(Screen):
             try:
                 os.remove(item[4])
             except:
-                self.PopUpDeleteItemWindow("Can't delete image. Do you want to force delete?", item_id)
+                self.PopUpDeleteItemWindow("Can't delete image. Do you want to force delete?", item_id, item[1])
                 return
         self.DeleteThings(item_id, item[1])
         return
 
 class CustomerCheckout(Screen):
-    def __init__(self, **kwargs):
+    def __init__(self, db, sm, **kwargs):
         super(CustomerCheckout, self).__init__(**kwargs)
         self.ItemSummaryList = {}
         self.TrackItemCountList = {}
         self.DoClean = True
-        self.ids.heading.add_widget(Heading())
+        self.sm = sm
+        self.db = db
+        self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
-        sm.get_screen('help_page').ids.help_page.goto('additem')
+        self.sm.get_screen('help_page').ids.help_page.goto('additem')
         self.DoClean = False
-        sm.current = 'help_page'
+        self.sm.current = 'help_page'
     
     def InitializeScreen(self):
         if 'choose_item_id' not in self.ids:
-            chooser = Chooser(choiceslist=db.id_list(), hint_text='enter item name/id', size_hint=(0.5,None), pos_hint={'center_x':0.5, 'center_y':0.5})
+            chooser = Chooser(self.sm,choiceslist=self.db.id_list(), hint_text='enter item name/id', size_hint=(0.5,None), pos_hint={'center_x':0.5, 'center_y':0.5})
             self.ids.choose_item_id_.add_widget(chooser)
             self.ids['choose_item_id'] = chooser
         else:
-            self.ids.choose_item_id.choiceslist = db.id_list()
+            self.ids.choose_item_id.choiceslist = self.db.id_list()
             if self.DoClean:
                 self.ItemSummaryList.clear()
                 self.TrackItemCountList.clear()
 
     def ShowItemDetails(self):
-        item = db.get_item_properties(self.ids.choose_item_id.text.strip())
+        item = self.db.get_item_properties(self.ids.choose_item_id.text.strip())
         self.ids.checkout_item_name.text = item[1]
         self.ids.checkout_item_cost.text = str(item[3])
         self.ids.checkout_image.source = item[4]
@@ -794,7 +824,7 @@ class CustomerCheckout(Screen):
     def AddClicked(self):
         item_id = self.ids.choose_item_id.text.strip()
         if len(item_id) > 1:
-            item = db.get_item_properties(item_id)
+            item = self.db.get_item_properties(item_id)
             if item is None:
                 WrongItemPopUp('Item id does not exist.')
                 self.ResetDetails()
@@ -901,7 +931,7 @@ class CustomerCheckout(Screen):
         scroll_vp_height = self.ids.add_item_label.viewport_size[1]
         scroll_height = self.ids.add_item_label.height
 
-        label = AddItemWidgetLabelV2() 
+        label = AddItemWidgetLabelV2(self.sm) 
         label.my_id = KEY
         item = self.ItemSummaryList[KEY]
         label.ids.add_item_widget_label.text = self.CutTexts(item[0], 12) + ':  ' + self.CutTexts(item[1], 12) + ' --> ' + self.CutTexts(str(item[2]), 6)
@@ -933,13 +963,13 @@ class CustomerCheckout(Screen):
         self.RefreshScreen()
         self.ids.add_item_label_box.clear_widgets()
         self.DoClean = True
-        sm.current = 'all_items'
+        self.sm.current = 'all_items'
 
     def Submit(self):
         if len(self.ItemSummaryList) > 0:
-            sm.current = 'customer_info'
-            sm.current_screen.ids.checkout_button.disabled = False
-            sm.current_screen.ids.checkout_back_button.disabled = False
+            self.sm.current = 'customer_info'
+            self.sm.current_screen.ids.checkout_button.disabled = False
+            self.sm.current_screen.ids.checkout_back_button.disabled = False
             self.RefreshScreen()
         else:
             WrongItemPopUp('Click on "Add to bucket" and then "Checkout".')
@@ -949,21 +979,24 @@ class SetExtraItemCheckoutPopupBox(BoxLayout):
     pass
 
 class CustomerInfoScreen(Screen):
-    def __init__(self, **kwargs):
+    def __init__(self, db, customer_db, sm, **kwargs):
         super(CustomerInfoScreen, self).__init__(**kwargs)
-        self.ids.heading.add_widget(Heading())
+        self.sm = sm
+        self.db = db
+        self.customer_db = customer_db
+        self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
-        sm.get_screen('help_page').ids.help_page.goto('additem')
-        sm.current = 'help_page'
+        self.sm.get_screen('help_page').ids.help_page.goto('additem')
+        self.sm.current = 'help_page'
 
     def InitializeScreen(self):
         if 'choose_customer_id' not in self.ids:
-            chooser = Chooser(choiceslist=customer_db.id_list(), hint_text='customer name/id', pos_hint={'center_x':0.5, 'center_y':0.5})
+            chooser = Chooser(self.sm,choiceslist=self.customer_db.id_list(), hint_text='customer name/id', pos_hint={'center_x':0.5, 'center_y':0.5})
             self.ids.customer_id.add_widget(chooser)
             self.ids['choose_customer_id'] = chooser
         else:
-            self.ids.choose_customer_id.choiceslist = customer_db.id_list()
+            self.ids.choose_customer_id.choiceslist = self.customer_db.id_list()
 
     def GenerateRandomId(self):
         self.ids.choose_customer_id.text = RandomId(max_limit=20, min_limit=10)
@@ -997,7 +1030,7 @@ class CustomerInfoScreen(Screen):
         if (self.customer_id_ is None) or len(self.customer_id_) == 0:
             self.customer_id_ = RandomId(max_limit=20, min_limit=10)
 
-        check_me = customer_db.check_customer_exists(self.customer_id_)
+        check_me = self.customer_db.check_customer_exists(self.customer_id_)
         if check_me:
             WrongItemPopUp('Customer id already exists. Provide new id.')
             return False
@@ -1011,15 +1044,15 @@ class CustomerInfoScreen(Screen):
 
     def Submit(self):
         if self.CheckCustomer():
-            customer_db.add_new_customer([self.customer_id_, self.customer_name_, self.customer_contact_,0, self.customer_comment_])
-            self.ids.choose_customer_id.choiceslist = customer_db.id_list()
+            self.customer_db.add_new_customer([self.customer_id_, self.customer_name_, self.customer_contact_,0, self.customer_comment_])
+            self.ids.choose_customer_id.choiceslist = self.customer_db.id_list()
             self.CleanFields()
 
     def UpdateCustomer(self):
         customer_id = self.ids.choose_customer_id.text
-        if customer_db.check_customer_exists(customer_id) :
+        if self.customer_db.check_customer_exists(customer_id) :
             update_customer_db = False
-            customer_details_from_db = customer_db.get_customer_properties(customer_id)
+            customer_details_from_db = self.customer_db.get_customer_properties(customer_id)
 
             customer_name_ = self.ids.customer_name.text.strip()
             if customer_name_ and customer_name_!=customer_details_from_db[1]: # and len(customer_name_) > 0 : 
@@ -1040,7 +1073,7 @@ class CustomerInfoScreen(Screen):
                 customer_comment_ = customer_details_from_db[4]
 
             if update_customer_db:
-                customer_db.update_customer_details([customer_name_, customer_contact_, customer_comment_, customer_id])
+                self.customer_db.update_customer_details([customer_name_, customer_contact_, customer_comment_, customer_id])
                 WrongItemPopUp('Update successful.')
                 self.CleanFields()
             else:
@@ -1052,9 +1085,9 @@ class CustomerInfoScreen(Screen):
 
     def DeleteCustomer(self):
         customer_id = self.ids.choose_customer_id.text
-        if customer_db.check_customer_exists(customer_id) :
-            customer_db.DeleteCustomer(customer_id)
-            self.ids.choose_customer_id.choiceslist = customer_db.id_list()
+        if self.customer_db.check_customer_exists(customer_id) :
+            self.customer_db.DeleteCustomer(customer_id)
+            self.ids.choose_customer_id.choiceslist = self.customer_db.id_list()
             WrongItemPopUp('Delete successful.')
             self.CleanFields()
         else:
@@ -1062,8 +1095,8 @@ class CustomerInfoScreen(Screen):
 
     def get_customer(self):
         customer_id = self.ids.choose_customer_id.text
-        if customer_db.check_customer_exists(customer_id) :
-            customer_details_from_db = customer_db.get_customer_properties(customer_id)
+        if self.customer_db.check_customer_exists(customer_id) :
+            customer_details_from_db = self.customer_db.get_customer_properties(customer_id)
             self.ids.customer_name.text = customer_details_from_db[1]
             self.ids.customer_contact.text = customer_details_from_db[2]
             self.ids.customer_comment.text = customer_details_from_db[4]
@@ -1081,7 +1114,7 @@ class CustomerInfoScreen(Screen):
         self.ids.customer_comment.text = ''
 
     def PopupCallBack(self, customer_name, customer_contact, instance):
-        sm.get_screen('customer_checkout').ItemSummaryList['customer']=[customer_name, customer_contact]
+        self.sm.get_screen('customer_checkout').ItemSummaryList['customer']=[customer_name, customer_contact]
         self.FinalizeCheckout()
 
     def PopUp(self, popup_text, customer_name, customer_contact):
@@ -1103,9 +1136,9 @@ class CustomerInfoScreen(Screen):
         customer_namee = self.ids.customer_name.text.strip()
         customer_cont = self.ids.customer_contact.text.strip()
         if (customer_id is not None) and len(customer_id)>0:
-            check_me = customer_db.check_customer_exists(customer_id)
+            check_me = self.customer_db.check_customer_exists(customer_id)
             if check_me:
-                customer_db.update_visit_count(customer_id)
+                self.customer_db.update_visit_count(customer_id)
             else:
                 popup_text = 'No data exists under this customer id. Do you want to continue without customer info?'
                 self.PopUp(popup_text,'','')
@@ -1121,7 +1154,7 @@ class CustomerInfoScreen(Screen):
                 return
 
         #print(sm.get_screen('customer_checkout').ItemSummaryList)
-        sm.get_screen('customer_checkout').ItemSummaryList['customer']=[customer_namee, customer_cont]
+        self.sm.get_screen('customer_checkout').ItemSummaryList['customer']=[customer_namee, customer_cont]
         self.FinalizeCheckout()
         return True
 
@@ -1132,22 +1165,42 @@ class CustomerInfoScreen(Screen):
 
     def Quit(self):
         self.CleanFields()
-        sm.get_screen('customer_checkout').ids.add_item_label_box.clear_widgets()
-        sm.get_screen('customer_checkout').DoClean = True
-        sm.current = 'all_items'
+        self.sm.get_screen('customer_checkout').ids.add_item_label_box.clear_widgets()
+        self.sm.get_screen('customer_checkout').DoClean = True
+        self.sm.current = 'all_items'
 
     def BackToCheckoutItem(self):
         self.CleanFields()
-        sm.get_screen('customer_checkout').DoClean = False
-        sm.current = 'customer_checkout'
+        self.sm.get_screen('customer_checkout').DoClean = False
+        self.sm.current = 'customer_checkout'
+
+    def PrintConfirmationPopUp(self, popup_text, pdf, customer_name):
+        content = SetCustomerPopupBox()  
+        pop = Popup(title=popup_text,
+                      content=content,
+                      size_hint=(0.5,0.5),
+                      auto_dismiss = False)
+        content.ids.CustomerPopupBox_btn1.bind(on_press=partial(self.PrintPopupCallBack, pdf, customer_name))
+        content.ids.CustomerPopupBox_btn1.bind(on_release=pop.dismiss)
+        content.ids.CustomerPopupBox_btn2.bind(on_release=pop.dismiss)
+
+        pop.open()
+
+        return
+
+    def PrintPopupCallBack(self, pdf, customer_name, instance):
+        filepath_pdf = os.path.join(App.get_running_app().save_documents_dir, customer_name.replace(" ", "")+'_'+time.strftime("%Y%m%d_%H%M%S")+'.pdf')
+        pdf.output(filepath_pdf)
+        WrongItemPopUp(f"Chechout slip: {filepath_pdf}")
 
     def FinalizeCheckout(self):
-        self.PrintReport()
+        pdf, customer_name = self.PrintReport()
+        self.PrintConfirmationPopUp('Do you want to print the checkout slip?', pdf, customer_name)
         self.UpdateDataBase_for_Item() # This needs to be after PrintReport()
         self.Quit()
 
     def PrintReport(self):
-        self.summary_items = sm.get_screen('customer_checkout').ItemSummaryList
+        self.summary_items = self.sm.get_screen('customer_checkout').ItemSummaryList
         pdf = FPDF(orientation='P', unit='mm', format='A4')
         pdf.add_page()
         pdf.set_font("Arial", size=12)
@@ -1191,12 +1244,11 @@ class CustomerInfoScreen(Screen):
         pdf.ln(row_height)
         pdf.cell(0, 10, txt='Total:' + ' '*50 + str(total_items) + ' '*80 + str(total_cost), ln=1)
 
-        filepath_pdf = customer_name.replace(" ", "")+'_'+time.strftime("%Y%m%d_%H%M%S")+'.pdf'
-        pdf.output(filepath_pdf)
-        WrongItemPopUp(f"Items summary: {filepath_pdf}")
+        return pdf, customer_name
+
 
     def UpdateDataBase_for_Item(self):
-        get_all_items_screen_grid = sm.get_screen('all_items').ids.items_grid_layout
+        get_all_items_screen_grid = self.sm.get_screen('all_items').ids.items_grid_layout
         StockUpdate = []
         for item_id in self.summary_items:
             item = self.summary_items[item_id]
@@ -1204,29 +1256,10 @@ class CustomerInfoScreen(Screen):
             if not item[0].startswith('unknown'):
                 need_update_ids = get_all_items_screen_grid.ids[item[0]+'MainStore'].ids
                 need_update_ids.item_number.text = str(int(need_update_ids.item_number.text) - int(item[2]))
-        db.UpdateCheckoutItemStock(StockUpdate)
+        self.db.UpdateCheckoutItemStock(StockUpdate)
 
 class SetCustomerPopupBox(BoxLayout):
     pass
-
-class WindowManager(ScreenManager):
-    pass
-
-sm = WindowManager()
-
-screens = [ 
-            MainStoreWindow(name="all_items"), 
-            AddItemWindow(name='new_item_add'), 
-            UpdateItemDetails(name='details_update'), 
-            #UpdateItemDetails(name='delete_item'), 
-            CustomerInfoScreen(name='customer_info'), 
-            CustomerCheckout(name='customer_checkout'), 
-            TakePicture(name='take_picture'),
-            HelpPageScreen(name='help_page')
-            ]
-
-for screen in screens:
-    sm.add_widget(screen)
 
 class InventoryManagerApp(App):
     def __init__(self, **kwargs):
@@ -1234,21 +1267,61 @@ class InventoryManagerApp(App):
         self.previous_screen = "" 
 
     @property
-    def storage_path(self):
-        return self.user_data_dir
-    
+    def image_storage_path(self):
+        return self.save_image_dir
+
     def build(self):
-        return sm
+        self.save_image_dir = self.config.get("General", 'image_save_path')
+        self.save_documents_dir = self.config.get("General", 'document_save_path')
+        self.DataBaseFile = self.config.get("General","database_save_path")
+        self.DataBaseFile = os.path.join(self.DataBaseFile,'InventoryManagerDataBase.db')
+        self.db = DataBase(self.DataBaseFile)
+        self.customer_db = CustomerDataBase(self.DataBaseFile)
+        self.sm = ScreenManager()
+        
+        screens = [ 
+                    MainStoreWindow(self.db,self.sm, name="all_items"), 
+                    AddItemWindow(self.db,self.sm,name='new_item_add'), 
+                    UpdateItemDetails(self.db,self.sm,name='details_update'), 
+                    CustomerInfoScreen(self.db, self.customer_db,self.sm,name='customer_info'), 
+                    CustomerCheckout(self.db,self.sm,name='customer_checkout'), 
+                    TakePicture(self.sm,name='take_picture'),
+                    HelpPageScreen(self.sm,name='help_page')
+                    ]
+        
+        for screen in screens:
+            self.sm.add_widget(screen)
+
+        #self.use_kivy_settings = False
+        return self.sm
+
+    def build_config(self, config):
+        config.setdefaults("General", {
+                                        "image_save_path": self.user_data_dir, 
+                                        "database_save_path": self.user_data_dir,
+                                        "document_save_path": self.user_data_dir})
+
+    def build_settings(self, settings):
+        settings.add_json_panel("Settings", self.config, data=update_settings)
+
+    def on_config_change(self, config, section, key, value):
+        if key == "image_save_path":
+            self.save_image_dir = value
+        elif key == "database_save_path":
+            self.DataBaseFile = value
+        elif key == 'document_save_path':
+            self.save_documents_dir = value
+
 
     def on_start(self, **kwargs):
-        self.items = db.ReturnAllItems()
+        self.items = self.db.ReturnAllItems()
         if self.items:
-            sm.get_screen('all_items').items = self.items
+            self.sm.get_screen('all_items').items = self.items
             del self.items
             gc.collect()
-            sm.get_screen('all_items').ShowItemTemplates()
+            self.sm.get_screen('all_items').ShowItemTemplates()
         else:
-            sm.get_screen('all_items').AllItemGridLayout()
+            self.sm.get_screen('all_items').AllItemGridLayout()
 
 if __name__ == '__main__':
     __version__ = '0.1'
