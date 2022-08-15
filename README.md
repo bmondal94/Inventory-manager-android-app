@@ -105,7 +105,8 @@ This is an **android app** for managing your inventory items. The `apk` file is 
 ###
 <img src='ScreenShots/page1.jpg' height='500'>  <img src='ScreenShots/page2.jpg' height='500'>  <img src='ScreenShots/page3.jpg' height='500'>
 <img src='ScreenShots/page4.jpg' height='500'>  <img src='ScreenShots/page5.jpg' height='500'>  <img src='ScreenShots/page6.jpg' height='500'>
-<img src='ScreenShots/page7.jpg' height='500'>  <img src='ScreenShots/page8.jpg' height='500'>
+<img src='ScreenShots/page7.jpg' height='500'>  <img src='ScreenShots/page8.jpg' height='500'>	<img src='ScreenShots/page9.jpg' height='500'>  
+<img src='ScreenShots/page10.jpg' height='500'>	<img src='ScreenShots/page11.jpg' height='500'> 
 
 
   
