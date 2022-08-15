@@ -1,8 +1,8 @@
 <ItemBoxTemplate>:
 	orientation: 'vertical'
-	spacing: 3
+	spacing: 5
 	size_hint_y: None
-	height: '100dp'	
+	height: '120dp'	
 	padding: [5, 5]
 	#padding: [5, 5, 15,5]
 	canvas.before:
@@ -13,7 +13,7 @@
 			size: self.size
 	BoxLayout:
 		orientation: 'horizontal'
-		size_hint_y: 0.8
+		size_hint_y: 0.7
 		spacing: 8
 		Image:
 			id: image
@@ -28,14 +28,14 @@
 				orientation: 'horizontal'
 				Label:
 					text: 'Name:'
-					size_hint_x: 0.3
+					size_hint_x: 0.33
 				Label:
 					id: item_name
 			BoxLayout:
 				orientation: 'horizontal'
 				Label:
 					text: '   ID:'
-					size_hint_x: 0.12
+					size_hint_x: 0.15
 				Label:
 					id: item_id
 			BoxLayout:
@@ -54,14 +54,37 @@
 						text: 'Price:'
 					Label:
 						id: item_cost
+	
+	BoxLayout:
+		size_hint_y: 0.05
+		padding: 0,0,0,0
+		canvas:
+			Color:
+				rgba: 0,0,0,0.8
+			Line:
+				width: 1.2
+				points: self.center_x-self.width*0.48,self.center_y,self.center_x+self.width*0.48,self.center_y
 	BoxLayout:
 		orientation: 'horizontal'
-		size_hint_y: 0.3
-		#spacing: 150
+		size_hint_y: 0.25
+		padding: 20,0,20,0
+		Button:
+			#text: 'Remove item'
+			size_hint_x: 0.07
+			background_normal: 'imgs/app/update.jpg'
+			border: 0,0,0,0
+			on_press: root.DetailsUpdateScreen()
+		Label:
+			size_hint_x: 0.25
 		BoxLayout:
 			orientation: 'horizontal'
-			size_hint_x: 0.5
+			size_hint_x: 0.37
 			spacing: 3
+			Button:
+				id: add_item_count
+				text: '+'
+				size_hint_x: 0.3
+				on_press: root.buttonAddClicked(item_id.text, NumberOfItems.text)
 			TextInput:
 				id: NumberOfItems
 				text: '1'
@@ -69,31 +92,15 @@
 				#multiline: False
 				on_focus: NumberOfItems.text = '1'
 			Button:
-				id: add_item_count
-				text: '+'
-				size_hint_x: 0.3
-				on_press: root.buttonAddClicked(item_id.text, NumberOfItems.text)
-			Button:
 				id: delete_item_count
 				text: '-'
 				size_hint_x: 0.3
 				on_press: root.buttonDeleteClicked(item_id.text, NumberOfItems.text)
 		Label:
-			size_hint_x: 0.3
-		BoxLayout:
-			orientation: 'horizontal'
-			size_hint_x: 0.15
-			spacing: 15
-			#padding: 5
-			Button:
-				#text: 'Remove item'
-				#size_hint_x: 0.06
-				background_normal: 'imgs/app/update.jpg'
-				border: 0,0,0,0
-				on_press: root.DetailsUpdateScreen()
-			Button:
-				#text: 'Remove item'
-				#size_hint_x: 0.08
-				background_normal: 'imgs/app/delete.jpg'	
-				border: 0,0,0,0
-				on_press: root.RemoveItem()
+			size_hint_x: 0.25
+		Button:
+			#text: 'Remove item'
+			size_hint_x: 0.07
+			background_normal: 'imgs/app/delete.jpg'	
+			border: 0,0,0,0
+			on_press: root.RemoveItem()

@@ -22,12 +22,14 @@ from kivy.uix.dropdown import DropDown
 from kivy.uix.textinput import TextInput
 from kivy.properties import StringProperty, ListProperty, ObjectProperty
 from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.settings import SettingsWithSpinner, SettingPath
 from functools import partial
 from kivy.clock import Clock
 from kivy.utils import platform
 ##from kivy.resources import resource_add_path, resource_find
 from database import DataBase, CustomerDataBase 
 from update_settings import  update_settings
+from update_settings_string_path import  update_settings as update_settings_string_path
 import string
 import random
 import os
@@ -233,8 +235,12 @@ class ItemBoxTemplate(BoxLayout):
         get_screen_ids.choose_item_id.text = self.ids.item_id.text
         get_screen_ids.choose_item_id_box_id.disabled = True
         get_screen_ids.update_item_details_data_box.disabled = False
-        #if sm.current_screen.get_item_details():
-        self.sm.current_screen.ShowItemDetails()
+        #self.sm.current_screen.ShowItemDetails()
+        item = self.db.get_item_properties(self.ids.item_id.text)
+        get_screen_ids.update_item_name.text = item[1]
+        get_screen_ids.update_item_number.text = str(item[2])
+        get_screen_ids.update_item_cost.text = str(item[3])
+        get_screen_ids.update_image.source = item[4]
 
 class TakePicture(Screen):
 
@@ -264,7 +270,10 @@ class TakePicture(Screen):
         self.sm.current_screen.ids.image_path.focus = not self.sm.current_screen.ids.image_path.focus
 
 class Filechooser(BoxLayout):
-    pass
+    def __init__(self, **kwargs):
+        super(Filechooser, self).__init__(**kwargs)
+        self.ids.let_choose.path = '/storage/emulated/0/' if platform == 'android' else '.'
+
 class LetsSelectFile:
     def __init__(self, sm, **kwargs):
         self.sm = sm
@@ -1292,25 +1301,71 @@ class InventoryManagerApp(App):
         for screen in screens:
             self.sm.add_widget(screen)
 
-        #self.use_kivy_settings = False
+        self.use_kivy_settings = False
+
+        Window.bind(on_keyboard=self.android_back_button)
+
         return self.sm
 
+    def android_back_button(self, window, key, scancode, codepoint, modifier):
+        if key == 27:
+            #if self.sm.current=='all_items': 
+            #    self.stop()
+            return True
+        else:
+            return False
+
+
     def build_config(self, config):
+        default_path = self.user_data_dir
         config.setdefaults("General", {
-                                        "image_save_path": self.user_data_dir, 
-                                        "database_save_path": self.user_data_dir,
-                                        "document_save_path": self.user_data_dir})
+                                        "image_save_path": default_path, 
+                                        "database_save_path": default_path,
+                                        "document_save_path": default_path})
 
     def build_settings(self, settings):
-        settings.add_json_panel("Settings", self.config, data=update_settings)
+        #settings.add_json_panel("Settings", self.config, data=update_settings)
+        settings.add_json_panel("Settings", self.config, data=update_settings_string_path)
+
+    def WrongPathCallBack(self, pop, instance):
+        self.close_settings()
+        self.destroy_settings()
+        self.open_settings()
+        pop.dismiss()
+
+    def WrongPath(self, pop_text):
+        content = Button(text='Close',
+                        size_hint_y=0.1) 
+        pop = Popup(title=pop_text,
+                      content=content,
+                      size_hint=(0.5,0.5),
+                      auto_dismiss = False)
+        content.bind(on_press=partial(self.WrongPathCallBack, pop))
+        pop.open()
 
     def on_config_change(self, config, section, key, value):
-        if key == "image_save_path":
-            self.save_image_dir = value
-        elif key == "database_save_path":
-            self.DataBaseFile = value
-        elif key == 'document_save_path':
-            self.save_documents_dir = value
+        if not os.path.isdir(value):
+            config.set("General", key, self.user_data_dir)
+            config.write()
+            self.WrongPath("Path is not a directory or does not exists. Resetting to default path.")
+        else:
+            try:
+                testfilepath = os.path.join(value, "testfile.txt")
+                fp = open(testfilepath, 'w')
+                fp.write(testfilepath)
+                fp.close()
+                os.remove(testfilepath)
+            except:
+                config.set("General", key, self.user_data_dir)
+                config.write()
+                self.WrongPath("Write permission denied. Resetting to default path.")
+            else:
+                if key == "image_save_path":
+                    self.save_image_dir = value
+                elif key == "database_save_path":
+                    self.DataBaseFile = value
+                elif key == 'document_save_path':
+                    self.save_documents_dir = value
 
 
     def on_start(self, **kwargs):
