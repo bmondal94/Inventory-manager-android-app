@@ -19,7 +19,7 @@ source.include_exts = rst,py,png,jpg,jpeg,kv,atlas
 source.include_patterns = imgs/*, imgs/app/*, kvFiles/*, documents/*
 
 # (list) Source files to exclude (let empty to not exclude anything)
-source.exclude_exts = spec 
+source.exclude_exts = spec, txt, md 
 
 # (list) List of directory to exclude (let empty to not exclude anything)
 source.exclude_dirs = __pycache__, tests, bin, venv, ScreenShots, Raw_imgs, src

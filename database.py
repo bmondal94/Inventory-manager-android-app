@@ -15,8 +15,38 @@ class DataBase:
                     NAME  TEXT NOT NULL,
                     COUNT INTEGER,
                     COST  REAL,
-                    IMAGE  TEXT NOT NULL)''')
+                    IMAGE  TEXT NOT NULL,
+                    TODAY INTEGER default 0,
+                    TOMONTH INTEGER default 0)''')
         self.conn.close()
+
+    def TrackTodayItems(self, today_date):
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            try:
+                self.conn.execute('''ALTER TABLE ALLDATA ADD COLUMN D''' + today_date + '''D INTEGER default 0''')
+            except:
+                pass
+            else:
+                columns = self.conn.execute('''PRAGMA table_info('ALLDATA')''').fetchall()
+                today_col = columns[5][1]
+                self.conn.execute('''ALTER TABLE ALLDATA DROP COLUMN ''' + today_col)
+                try:
+                    self.conn.execute('''ALTER TABLE ALLDATA ADD COLUMN M''' + today_date[2:] + '''M INTEGER default 0''')
+                except:
+                    pass
+                else:
+                    tomonth_col = columns[6][1]
+                    self.conn.execute('''ALTER TABLE ALLDATA DROP COLUMN ''' + tomonth_col)
+                self.conn.execute("VACUUM")
+        self.conn.close()
+
+    def ReturnCompleteList(self):
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            tmp_items = self.conn.execute('''SELECT * FROM ALLDATA''').fetchall()
+        self.conn.close()
+        return tmp_items
 
     def ReturnAllItems(self):
         self.conn = sq.connect(self.filename)
@@ -59,14 +89,14 @@ class DataBase:
         self.conn = sq.connect(self.filename)
 
         with self.conn:
-            self.conn.executemany('''INSERT INTO ALLDATA VALUES (?, ?, ?, ?, ?)''', item_list )
+            self.conn.executemany('''INSERT INTO ALLDATA(ID, NAME, COUNT, COST, IMAGE) VALUES (?, ?, ?, ?, ?)''', item_list )
         
         self.conn.close()
         return
 
     def id_list(self):
         self.conn = sq.connect(self.filename)
-        item_ids = self.conn.execute('''SELECT * FROM ALLDATA''').fetchall()
+        item_ids = self.conn.execute('''SELECT ID, NAME FROM ALLDATA''').fetchall()
         self.conn.close()
         #return sorted([id_[0] for id_ in item_ids])
         return [(id_[0], id_[0]) for id_ in item_ids] + [(id_[1],id_[0]) for id_ in item_ids]
@@ -92,10 +122,12 @@ class DataBase:
         self.conn.close()
         return 
 
-    def UpdateCheckoutItemStock(self, partial_item):
+    def UpdateCheckoutItemStock(self, partial_item, date_):
         self.conn = sq.connect(self.filename)
         with self.conn:
             self.conn.executemany('''UPDATE ALLDATA SET COUNT = COUNT - ? WHERE ID==?''', partial_item)
+            self.conn.executemany('''UPDATE ALLDATA SET D'''+ date_ + '''D = D'''+ date_ + '''D + ? WHERE ID==?''', partial_item)
+            self.conn.executemany('''UPDATE ALLDATA SET M'''+ date_[2:] + '''M = M'''+ date_[2:] + '''M + ? WHERE ID==?''', partial_item)
         self.conn.close()
         return 
 
@@ -115,6 +147,13 @@ class CustomerDataBase:
                     TOTAL_VISIT INTEGER,
                     COMMENT  TEXT)''')
         self.conn.close()
+
+    def SummaryAllCustomers(self):
+        self.conn = sq.connect(self.filename)
+        with self.conn:
+            self.items = self.conn.execute('''SELECT ID, TOTAL_VISIT  FROM CUSTOMERDATA''').fetchall()
+        self.conn.close()
+        return self.items
 
     def update_visit_count(self, customer_id):
 
@@ -144,7 +183,7 @@ class CustomerDataBase:
 
     def id_list(self):
         self.conn = sq.connect(self.filename)
-        item_ids = self.conn.execute('''SELECT * FROM CUSTOMERDATA''').fetchall()
+        item_ids = self.conn.execute('''SELECT ID, NAME FROM CUSTOMERDATA''').fetchall()
         self.conn.close()
         #return sorted([id_[0] for id_ in item_ids])
         return [(id_[0], id_[0]) for id_ in item_ids] + [(id_[1],id_[0]) for id_ in item_ids]

@@ -152,7 +152,7 @@
 							RoundedRectangle:
 								pos: self.pos
 								size: self.size
-						text: ' - "*" is mandatory. \n- Default stock is 0. \n- Default price is 0. \n- Default image is test.jpg .\n- Multiple item can be added.'
+						text: ' -  "*" is mandatory. \n- Default stock is 0. \n- Default price is 0. \n- Default image is test.jpg .\n- Multiple item can be added.\n- Camera can be used multiple times.\n- Manualy delete unnecessary images.'
 						#size_hint: None, None
 						size_hint_x: 0.67
 						size: self.texture_size
@@ -181,11 +181,18 @@
 							size: self.size
 					padding: [5, 5]
 					size_hint_y: 0.34
+					spacing: 10
 					Label:
 						text: 'Items added: '
 						size_hint: (None, None)
 						size: self.texture_size
 					ScrollView:
+						canvas.before:
+							Color:
+								rgba: 0,0,0,0.2
+							Line:
+								width: 1.2
+								rounded_rectangle: self.x, self.y, self.width, self.height, 10
 						id: add_item_label
 						BoxLayout:
 							id: add_item_label_box
@@ -219,7 +226,7 @@
 	
 						Button:
 							text: 'Quit'
-							on_press: app.stop()
+							on_press: root.QuitWholeApp()
 <AddItemWidgetLabelV2>:
 	orientation: 'horizontal'
 	size_hint_y: None

@@ -15,10 +15,23 @@
 			resolution: (640, 480) 
 			play: False
 			allow_stretch: True
-		ToggleButton:
-			text: 'play'
-			on_press: camera_img.play = not camera_img.play
+			keep_ratio: True
+		#BoxLayout:
+		#	size_hint_y: 0.05
+		#	padding: 10
+		#	Label:
+		#		text: "- Use 'capture' or 'play' button to capture the image."
+		#		size_hint: (None, None)
+		BoxLayout:
+			orientation: 'horizontal'
 			size_hint_y: 0.08
+			spacing: 10
+			ToggleButton:
+				text: 'play'
+				on_press: camera_img.play = not camera_img.play
+			ToggleButton:
+				text: 'switch'
+				on_press: camera_img.keep_ratio = not camera_img.keep_ratio
 		BoxLayout:
 			orientation: 'horizontal'
 			size_hint_y: 0.08
@@ -34,5 +47,5 @@
 				on_press: root.ReturnBack()
 			Button:
 				text: 'Quit'
-				on_press: app.stop()
+				on_press: root.QuitWholeApp()
 			

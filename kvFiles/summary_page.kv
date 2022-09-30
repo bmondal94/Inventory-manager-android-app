@@ -1,0 +1,121 @@
+<SummaryScreen>:
+	name: "summary_page"
+
+	on_pre_enter: root.InitializeScreen()
+
+	canvas.before:
+		Color:
+			rgba: 1,1,1,1
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	BoxLayout:
+		orientation:'vertical'
+		BoxLayout:
+			size_hint_y: 0.08
+			id: heading
+		BoxLayout:
+			orientation:'vertical'
+			padding: 10
+			BoxLayout:
+				orientation:'vertical'
+				spacing: 10
+				Label:
+					canvas.before:
+						Color:
+							rgba: 0,0.5,1,1
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					text: 'Summary'
+					bold: True
+					font_size: '20sp'
+					size_hint: (1, 0.06)
+				BoxLayout:
+					orientation: 'vertical'
+					padding: 5
+					size_hint_y: 0.49
+					spacing: 10
+					canvas.before:
+						Color:
+							rgba: 0,0,0,0.2
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					Label:
+						id: total_registered_item
+						size_hint_x: None
+						font_size: '20sp'
+						size: self.texture_size
+						color: 0,0,0,1
+					Label:
+						id: total_registered_stock
+						size_hint_x: None
+						size: self.texture_size
+						font_size: '20sp'
+						color: 0,0,0,1
+					Label:
+						id: total_registered_customer
+						size_hint_x: None
+						font_size: '20sp'
+						size: self.texture_size
+						color: 0,0,0,1
+					Label:
+						id: total_registered_stock_cost
+						size_hint_x: None
+						size: self.texture_size
+						font_size: '20sp'
+						color: 0,0,0,1
+					Label:
+						id: total_sell_day
+						size_hint_x: None
+						font_size: '20sp'
+						size: self.texture_size
+						color: 0,0,0,1
+					Label:
+						id: total_sell_month
+						size_hint_x: None
+						size: self.texture_size
+						font_size: '20sp'
+						color: 0,0,0,1
+					Label:
+						id: total_income_day
+						size_hint_x: None
+						size: self.texture_size
+						font_size: '20sp'
+						color: 0,0,0,1
+					Label:
+						id: total_income_month
+						size_hint_x: None
+						font_size: '20sp'
+						size: self.texture_size
+						color: 0,0,0,1
+				ScrollView:
+					size_hint: (1, 0.40)
+					canvas.before:
+						Color:
+							rgba: 0,0,0,0.2
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					Label:
+						id: total_sellSummary_today
+						size_hint: (None, None)
+						font_size: '20sp'
+						size: self.texture_size
+						color: 0,0,0,1
+						
+				BoxLayout:
+					orientation: 'horizontal'			
+					size_hint_y: 0.05
+					spacing: 5
+					Button:
+						text: 'Print'
+						on_press: root.PrintSummary()
+					Button:
+						text: 'Home'
+						on_press: root.ReturnBack() 
+
+					Button:
+						text: 'Quit'
+						on_press: root.QuitWholeApp() 

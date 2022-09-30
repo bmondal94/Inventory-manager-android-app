@@ -88,7 +88,7 @@
 							on_press: root.DeleteItemScreen()
 						Button:
 							text: 'Summary'
-							on_press: root.PrintSummary()
+							on_press: root.ItemSummaryPage()
 
 					BoxLayout:
 						orientation: 'horizontal'			
@@ -116,4 +116,4 @@
 						Button:
 							text: 'Quit'
 							size_hint_x: 0.15
-							on_press: app.stop() 
+							on_press: root.QuitWholeApp() 

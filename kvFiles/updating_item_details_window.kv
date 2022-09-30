@@ -33,7 +33,7 @@
 				font_size: '20sp'
 				size_hint_y: 0.06
 			BoxLayout:
-				size_hint_y: 0.2
+				size_hint_y: 0.25
 				orientation: 'vertical'
 				spacing: 5
 				id: update_item_id_row
@@ -190,7 +190,7 @@
 								rounded_rectangle: self.x, self.y, self.width, self.height, 10
 						Image:
 							id: compare_old_image
-							source:
+							source: 
 							allow_stretch: True
 							size: self.texture_size
 					Label:
@@ -210,7 +210,13 @@
 							allow_stretch: True
 							size: self.texture_size
 			BoxLayout:
-				size_hint_y: 0.19
+				size_hint_y: 0.14
+				canvas.before:
+					Color:
+						rgba: 0,0,0,0.2
+					Rectangle:
+						pos: self.pos
+						size: self.size
 			BoxLayout:
 				orientation: 'horizontal'	
 				size_hint_y: 0.05
@@ -237,4 +243,4 @@
 				Button:
 					text: 'Quit'
 					size_hint_x: 0.18
-					on_press: app.stop()
+					on_press: root.QuitWholeApp()

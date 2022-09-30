@@ -41,6 +41,8 @@ Builder.load_file('kvFiles/heading.kv')
 Builder.load_file('kvFiles/previous_screen.kv')
 Builder.load_file('kvFiles/help_page.kv')
 
+Builder.load_file('kvFiles/summary_page.kv')
+
 Builder.load_file('kvFiles/main_store_window.kv')
 Builder.load_file('kvFiles/each_item_box_template.kv')
 
@@ -90,6 +92,24 @@ def WrongItemPopUp(popup_text):
     content.bind(on_press=pop.dismiss)
 
     pop.open()
+
+class QuitTheApp:
+    def QuitApp(self, instance):
+        App.get_running_app().stop()
+
+    def AppQuit(self):
+        #print(self.QuitApp('x'))
+        content = SetCustomerPopupBox()  
+        pop = Popup(title='Quit App?',
+                      content=content,
+                      size_hint=(0.5,0.5),
+                      auto_dismiss = False)
+        content.ids.CustomerPopupBox_btn1.bind(on_press=partial(self.QuitApp))
+        content.ids.CustomerPopupBox_btn1.bind(on_release=pop.dismiss)
+        content.ids.CustomerPopupBox_btn2.bind(on_release= pop.dismiss)
+        pop.open()
+        return
+
 
 # https://stackoverflow.com/a/59805349
 class Chooser(TextInput):
@@ -187,7 +207,7 @@ class ItemBoxTemplate(BoxLayout):
             try:
                 os.remove(tmp_image_path)
             except:
-                self.PopUp("Can't delete image. Do you want to force delete?")
+                self.PopUp("Warning: Can't delete image. Probably, image does not exist. Do you want to force delete the item?")
                 return
         self.db.DeleteItem(self.ids.item_id.text)
         self.parent.remove_widget(self)
@@ -269,6 +289,9 @@ class TakePicture(Screen):
         self.sm.current = self.which_window
         self.sm.current_screen.ids.image_path.focus = not self.sm.current_screen.ids.image_path.focus
 
+    def QuitWholeApp(self):
+        QuitTheApp().AppQuit()
+
 class Filechooser(BoxLayout):
     def __init__(self, **kwargs):
         super(Filechooser, self).__init__(**kwargs)
@@ -305,6 +328,9 @@ class HelpPageScreen(Screen):
         #sm.get_screen('help_page').ids.help_page.goto('additem')
         self.sm.current = 'help_page'
 
+    def QuitWholeApp(self):
+        QuitTheApp().AppQuit()
+
 class MainStoreWindow(Screen):
     def __init__(self, db, sm, **kwargs):
         super(MainStoreWindow, self).__init__(**kwargs)
@@ -313,7 +339,7 @@ class MainStoreWindow(Screen):
         self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
-        #sm.get_screen('help_page').ids.help_page.goto('additem')
+        self.sm.get_screen('help_page').ids.help_page.goto('mainstore')
         self.sm.current = 'help_page'
 
     def InitializeScreen(self):
@@ -369,54 +395,22 @@ class MainStoreWindow(Screen):
         get_screen_ids.update_item_refresh_btn.disabled = True
         self.sm.current = 'details_update'
 
-    def PrintSummary(self):
-        self.summary_items = self.db.ReturnAllItems()
-        if self.summary_items:
-            # Create a popup for orientation
-            pdf = FPDF(orientation='P', unit='mm', format='A4')
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            pdf.cell(0, 10, txt='******** Welcome to Inventory Manager ********', ln=1, align='C')
-
-            Header_list = ['ID', 'NAME', 'COUNT', 'COST', 'IMAGE']
-            col_width = pdf.w / (float(len(Header_list)) + 0.5)
-            spacing = 1.5
-            row_height = pdf.font_size * spacing
-            pdf.cell(0, 10, txt='-------- Summary of all items in stock ---------', ln=1, align='C')
-            pdf.cell(0, 10, txt=time.strftime("%d-%m-%Y  %H:%M:%S"), ln=1, align='R')
-            pdf.ln(row_height)
-
-            pdf.cell(0, 10, txt='='*80, ln=1, align='C')
-            for hdr_fld in Header_list:
-                pdf.cell(col_width, row_height, txt=str(hdr_fld), border=0)
-            pdf.ln(row_height)
-            pdf.cell(0, 10, txt='='*80, ln=1, align='C')
-            pdf.ln(row_height)
-
-            for item in self.summary_items:
-                for col in item:
-                    tmp_txt = str(col) 
-                    if len(tmp_txt)>8: tmp_txt = tmp_txt[:9] + '...'
-                    pdf.cell(col_width, row_height, txt=tmp_txt, border=0)
-                pdf.ln(row_height)
-                #row_item = ''.join([str(col).strip().rjust(20) + " " for  col in item])
-                #pdf.cell(0, 10, txt = row_item, ln=1, align='C')
-
-            filepath_pdf = os.path.join(App.get_running_app().save_documents_dir, 'ItemsSummary_'+time.strftime("%Y%m%d_%H%M%S")+'.pdf')
-            pdf.output(filepath_pdf)
-            WrongItemPopUp(f"Items summary: {filepath_pdf}")
-        else:
-            WrongItemPopUp("No item exists.")
-
     def CustomerInfoPage(self):
         self.sm.current = 'customer_info'
         self.sm.current_screen.ids.checkout_button.disabled = True
         self.sm.current_screen.ids.checkout_back_button.disabled = True
+        self.sm.current_screen.ids.checkout_item_box.disabled = True
+        self.sm.current_screen.ids.checkout_item_box_viewport.text = '***** This will show the checkout items list during checkout. *****'
 
     def CustomerCheckOut(self):
        self.sm.current = 'customer_checkout'
 
+    def ItemSummaryPage(self):
+        self.sm.current = 'summary_page'
 
+    def QuitWholeApp(self):
+        QuitTheApp().AppQuit()
+    
 class AddItemWindow(Screen):
     item_namee = ObjectProperty()
     item_id = ObjectProperty()
@@ -577,6 +571,9 @@ class AddItemWindow(Screen):
         content = LetsSelectFile(self.sm)
         content.FileChooserClick()
 
+    def QuitWholeApp(self):
+        QuitTheApp().AppQuit()
+
 class AddItemWidgetLabelV2(BoxLayout):
     def __init__(self, sm, **kwargs):
         super(AddItemWidgetLabelV2, self).__init__(**kwargs)
@@ -587,6 +584,92 @@ class AddItemWidgetLabelV2(BoxLayout):
         self.sm.current_screen.ItemSummaryList.pop(self.my_id)
         self.parent.remove_widget(self)
 
+class SummaryScreen(Screen):
+    def __init__(self, db, customer_db, sm, **kwargs):
+        super(SummaryScreen, self).__init__(**kwargs)
+        self.db = db
+        self.sm = sm
+        self.customer_db = customer_db
+        self.ids.heading.add_widget(Heading(self.sm))
+
+    def HelpPage(self):
+        self.sm.current = 'help_page'
+    
+    def InitializeScreen(self):
+        self.summary_items = self.db.ReturnCompleteList()
+        self.summary_customers = self.customer_db.SummaryAllCustomers()
+        total_regi_item = len(self.summary_items)
+        total_regi_cus = len(self.summary_customers)
+        total_regi_stock = 0
+        total_regi_stock_cost = 0
+        total_item_sell_today = 0
+        total_item_sell_tomonth = 0
+        total_item_sell_today_worth = 0
+        total_item_sell_tomonth_worth = 0
+        self.ids.total_sellSummary_today.text ='--- All sell today/month (item: count) --- \n' 
+        for stock in self.summary_items:
+            total_regi_stock += stock[2]
+            total_regi_stock_cost += stock[2]*stock[3]
+            total_item_sell_today += stock[5]
+            total_item_sell_tomonth += stock[6]
+            total_item_sell_today_worth += stock[5]*stock[3]
+            total_item_sell_tomonth_worth += stock[6]*stock[3]
+            if stock[5]>0 or stock[6]>0:
+                self.ids.total_sellSummary_today.text += 'o  ' + stock[1][:15] + ': ' + str(stock[5]) + '/' + str(stock[6]) + '\n' 
+
+        self.ids.total_registered_item.text = f'Total item catagory : {total_regi_item}'
+        self.ids.total_registered_stock.text = f'Total stock number : {total_regi_stock}'
+        self.ids.total_registered_customer.text = f'Total registered customer : {total_regi_cus}'
+        self.ids.total_registered_stock_cost.text = f'--------- \nAggregate assets worth : {total_regi_stock_cost}'
+        self.ids.total_sell_day.text = f'Total item sold today : {total_item_sell_today}'
+        self.ids.total_sell_month.text = f'Total item sold this month : {total_item_sell_tomonth}'
+        self.ids.total_income_day.text = f'Total income today : {total_item_sell_today_worth}'
+        self.ids.total_income_month.text = f'Total income this month : {total_item_sell_tomonth_worth}'
+
+    def PrintSummary(self):
+        if self.summary_items:
+            # Create a popup for orientation
+            pdf = FPDF(orientation='P', unit='mm', format='A4')
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            pdf.cell(0, 10, txt='******** Welcome to Inventory Manager ********', ln=1, align='C')
+
+            Header_list = ['ID', 'NAME', 'COUNT', 'COST', 'IMAGE']
+            col_width = pdf.w / (float(len(Header_list)) + 0.5)
+            spacing = 1.5
+            row_height = pdf.font_size * spacing
+            pdf.cell(0, 10, txt='-------- Summary of all items in stock ---------', ln=1, align='C')
+            pdf.cell(0, 10, txt=time.strftime("%d-%m-%Y  %H:%M:%S"), ln=1, align='R')
+            pdf.ln(row_height)
+
+            pdf.cell(0, 10, txt='='*80, ln=1, align='C')
+            for hdr_fld in Header_list:
+                pdf.cell(col_width, row_height, txt=str(hdr_fld), border=0)
+            pdf.ln(row_height)
+            pdf.cell(0, 10, txt='='*80, ln=1, align='C')
+            pdf.ln(row_height)
+
+            for item in self.summary_items:
+                for col in item:
+                    tmp_txt = str(col) 
+                    if len(tmp_txt)>8: tmp_txt = tmp_txt[:9] + '...'
+                    pdf.cell(col_width, row_height, txt=tmp_txt, border=0)
+                pdf.ln(row_height)
+                #row_item = ''.join([str(col).strip().rjust(20) + " " for  col in item])
+                #pdf.cell(0, 10, txt = row_item, ln=1, align='C')
+
+            filepath_pdf = os.path.join(App.get_running_app().save_documents_dir, 'ItemsSummary_'+time.strftime("%Y%m%d_%H%M%S")+'.pdf')
+            pdf.output(filepath_pdf)
+            WrongItemPopUp(f"Items summary: {filepath_pdf}")
+        else:
+            WrongItemPopUp("No item exists.")
+
+    def ReturnBack(self):
+        self.sm.current = 'all_items'
+
+    def QuitWholeApp(self):
+        QuitTheApp().AppQuit()
+
 class UpdateItemDetails(Screen):
 
     def __init__(self, db, sm, **kwargs):
@@ -596,7 +679,7 @@ class UpdateItemDetails(Screen):
         self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
-        self.sm.get_screen('help_page').ids.help_page.goto('additem')
+        self.sm.get_screen('help_page').ids.help_page.goto('updateitem')
         self.sm.current = 'help_page'
 
     def InitializeScreen(self):
@@ -617,6 +700,7 @@ class UpdateItemDetails(Screen):
         self.ids.update_item_number.text = str(item[2])
         self.ids.update_item_cost.text = str(item[3])
         self.ids.update_image.source = item[4]
+        if self.ids.new_image_path_here.source: self.ids.compare_old_image.source = item[4]
 
     def CheckNumericStock(self, new_stock):
         itemm_stock = None
@@ -625,11 +709,11 @@ class UpdateItemDetails(Screen):
                 itemm_stock = int(float(new_stock))
                 if itemm_stock < 0:
                     WrongItemPopUp('Number of items should be postive.')
-                    return None
+                    return (None, True)
             except:
                 WrongItemPopUp('Stock number should be a number.')
-                return None
-        return itemm_stock
+                return (None, True)
+        return (itemm_stock, False)
 
     def CheckNumericCost(self, new_cost):
         itemm_cost = None
@@ -638,15 +722,15 @@ class UpdateItemDetails(Screen):
                 itemm_cost = float(new_cost)
                 if itemm_cost < 0:
                     WrongItemPopUp('Item cost should be postive.')
-                    return None
+                    return (None, True)
             except:
                 WrongItemPopUp('Item cost should be number.')
-                return None
-        return itemm_cost
+                return (None, True)
+        return (itemm_cost, False)
 
     def CheckItem_Update(self, new_stock, new_cost, new_name, new_image):
         item_id = self.ids.choose_item_id.text.strip()
-        if len(item_id) > 1:
+        if len(item_id) > 0:
             item = self.db.get_item_properties(item_id)
             if item is None:
                 WrongItemPopUp('Item id does not exist.')
@@ -658,9 +742,13 @@ class UpdateItemDetails(Screen):
             return
         new_name = None if len(new_name.strip())<1 else new_name.strip()
         new_image = None if len(new_image.strip())<1 else new_image.strip()
-        new_item_details = [new_name, self.CheckNumericStock(new_stock), self.CheckNumericCost(new_cost), new_image, item[0]]
+        newStock = self.CheckNumericStock(new_stock)
+        newCost = self.CheckNumericCost(new_cost)
+        if newStock[1] or newCost[1]:
+            return
+        new_item_details = [new_name, newStock[0], newCost[0], new_image, item[0]]
         if all(x is None for x in new_item_details[:-1]):
-            WrongItemPopUp('Nothing to save.')
+                WrongItemPopUp('Nothing to save.')
         else:
             for i, x in enumerate(new_item_details[:-1]):
                 if x is None: 
@@ -744,7 +832,7 @@ class UpdateItemDetails(Screen):
 
     def DeleteFullItem(self):
         item_id = self.ids.choose_item_id.text.strip()
-        if len(item_id) > 1:
+        if len(item_id) > 0:
             item = self.db.get_item_properties(item_id)
             if item is None:
                 WrongItemPopUp('Item id does not exist.')
@@ -763,6 +851,9 @@ class UpdateItemDetails(Screen):
         self.DeleteThings(item_id, item[1])
         return
 
+    def QuitWholeApp(self):
+        QuitTheApp().AppQuit()
+
 class CustomerCheckout(Screen):
     def __init__(self, db, sm, **kwargs):
         super(CustomerCheckout, self).__init__(**kwargs)
@@ -774,7 +865,7 @@ class CustomerCheckout(Screen):
         self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
-        self.sm.get_screen('help_page').ids.help_page.goto('additem')
+        self.sm.get_screen('help_page').ids.help_page.goto('customercheckout')
         self.DoClean = False
         self.sm.current = 'help_page'
     
@@ -803,10 +894,10 @@ class CustomerCheckout(Screen):
         try:
             new_item_numbers = int(new_item_numbers) if new_item_numbers is not None and len(new_item_numbers.strip())>0 else 0
         except:
-            WrongItemPopUp("Count can't be fraction.")
+            WrongItemPopUp("Count can't be non-number or fraction.")
             return 0
         if new_item_numbers == 0:
-            WrongItemPopUp("No item to add.")
+            WrongItemPopUp("No item to add in the list. Count should be greater than 0.")
         
         return new_item_numbers
 
@@ -832,7 +923,7 @@ class CustomerCheckout(Screen):
 
     def AddClicked(self):
         item_id = self.ids.choose_item_id.text.strip()
-        if len(item_id) > 1:
+        if len(item_id) > 0:
             item = self.db.get_item_properties(item_id)
             if item is None:
                 WrongItemPopUp('Item id does not exist.')
@@ -962,6 +1053,26 @@ class CustomerCheckout(Screen):
         self.ids.checkout_item_cost.text = ''
         self.ids.checkout_image.source = ''
 
+    def RefreshPopupCallBack(self, instance):
+        self.RefreshScreen()
+        self.ids.add_item_label_box.clear_widgets()
+        self.ItemSummaryList.clear()
+        self.TrackItemCountList.clear()
+
+    def RefreshPopUp(self):
+        content = SetCustomerPopupBox()  
+        pop = Popup(title='All previously added items will be cleaned. Are you sure?',
+                      content=content,
+                      size_hint=(0.5,0.5),
+                      auto_dismiss = False)
+        content.ids.CustomerPopupBox_btn1.bind(on_press=partial(self.RefreshPopupCallBack))
+        content.ids.CustomerPopupBox_btn1.bind(on_release=pop.dismiss)
+        content.ids.CustomerPopupBox_btn2.bind(on_release=pop.dismiss)
+
+        pop.open()
+
+        return
+
     def RefreshScreen(self):
         self.ResetDetails()
         self.ids.choose_item_id.text = ''
@@ -974,15 +1085,27 @@ class CustomerCheckout(Screen):
         self.DoClean = True
         self.sm.current = 'all_items'
 
+    def CreateCheckoutItemsSummaryList(self, ItemList):
+        text = ''
+        for ind in ItemList:
+            txt = ItemList[ind]
+            text += ' '*5 + self.CutTexts(txt[1], 12) + ': ' + self.CutTexts(str(txt[2]), 6) + '\n'
+        return text
+
     def Submit(self):
         if len(self.ItemSummaryList) > 0:
             self.sm.current = 'customer_info'
             self.sm.current_screen.ids.checkout_button.disabled = False
             self.sm.current_screen.ids.checkout_back_button.disabled = False
+            self.sm.current_screen.ids.checkout_item_box.disabled = False
+            self.sm.current_screen.ids.checkout_item_box_viewport.text = self.CreateCheckoutItemsSummaryList(self.ItemSummaryList)
             self.RefreshScreen()
         else:
             WrongItemPopUp('Click on "Add to bucket" and then "Checkout".')
         return
+
+    def QuitWholeApp(self):
+        QuitTheApp().AppQuit()
 
 class SetExtraItemCheckoutPopupBox(BoxLayout):
     pass
@@ -996,7 +1119,7 @@ class CustomerInfoScreen(Screen):
         self.ids.heading.add_widget(Heading(self.sm))
 
     def HelpPage(self):
-        self.sm.get_screen('help_page').ids.help_page.goto('additem')
+        self.sm.get_screen('help_page').ids.help_page.goto('customerinfo')
         self.sm.current = 'help_page'
 
     def InitializeScreen(self):
@@ -1176,6 +1299,7 @@ class CustomerInfoScreen(Screen):
         self.CleanFields()
         self.sm.get_screen('customer_checkout').ids.add_item_label_box.clear_widgets()
         self.sm.get_screen('customer_checkout').DoClean = True
+        self.ids.checkout_item_box_viewport.text = ''
         self.sm.current = 'all_items'
 
     def BackToCheckoutItem(self):
@@ -1265,7 +1389,10 @@ class CustomerInfoScreen(Screen):
             if not item[0].startswith('unknown'):
                 need_update_ids = get_all_items_screen_grid.ids[item[0]+'MainStore'].ids
                 need_update_ids.item_number.text = str(int(need_update_ids.item_number.text) - int(item[2]))
-        self.db.UpdateCheckoutItemStock(StockUpdate)
+        self.db.UpdateCheckoutItemStock(StockUpdate, time.strftime("%d%m%Y"))
+
+    def QuitWholeApp(self):
+        QuitTheApp().AppQuit()
 
 class SetCustomerPopupBox(BoxLayout):
     pass
@@ -1290,6 +1417,7 @@ class InventoryManagerApp(App):
         
         screens = [ 
                     MainStoreWindow(self.db,self.sm, name="all_items"), 
+                    SummaryScreen(self.db,self.customer_db,self.sm, name="summary_page"), 
                     AddItemWindow(self.db,self.sm,name='new_item_add'), 
                     UpdateItemDetails(self.db,self.sm,name='details_update'), 
                     CustomerInfoScreen(self.db, self.customer_db,self.sm,name='customer_info'), 
@@ -1370,6 +1498,8 @@ class InventoryManagerApp(App):
 
     def on_start(self, **kwargs):
         self.items = self.db.ReturnAllItems()
+        txt=time.strftime("%d%m%Y")
+        self.db.TrackTodayItems(txt)
         if self.items:
             self.sm.get_screen('all_items').items = self.items
             del self.items
@@ -1377,6 +1507,10 @@ class InventoryManagerApp(App):
             self.sm.get_screen('all_items').ShowItemTemplates()
         else:
             self.sm.get_screen('all_items').AllItemGridLayout()
+
+    def on_resume(self, **kwargs):
+        txt=time.strftime("%d%m%Y")
+        self.db.TrackTodayItems(txt)
 
 if __name__ == '__main__':
     __version__ = '0.1'

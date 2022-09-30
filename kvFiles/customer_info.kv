@@ -53,7 +53,7 @@
 			BoxLayout:
 				orientation: 'vertical'
 				padding: 10
-				size_hint_y: 0.3
+				size_hint_y: 0.26
 				spacing: 5
 				canvas.before:
 					Color:
@@ -92,7 +92,37 @@
 						hint_text: 'comment, previous debt etc.'
 						on_text: root.CheckLength_contact()
 			BoxLayout:
-				size_hint_y: 0.44
+				size_hint_y: 0.5
+				orientation: 'vertical'
+				canvas.before:
+					Color:
+						rgba: 0.1,0.4,0.5,1
+					RoundedRectangle:
+						pos: self.pos
+						size: self.size
+				padding: [15, 5, 15, 15]
+				id: checkout_item_box
+				spacing: 10
+				Label:
+					text: 'Checkout item list'
+					size_hint_y: None
+					size: self.texture_size
+					#font_size: '15sp'
+					underline: True
+				ScrollView:
+					canvas.before:
+						Color:
+							rgba: 0.4,0.7,0.5,1
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					Label:
+						id: checkout_item_box_viewport
+						text: '***** This will show the checkout items list during checkout. *****'
+						multiline: True
+						size_hint_y: None
+						text_size: self.width, None
+						height: self.texture_size[1]
 			BoxLayout:
 				orientation: 'horizontal'
 				size_hint_y: 0.05
@@ -127,11 +157,12 @@
 					on_press: root.ReturnBack()
 				Button:
 					text: 'Quit'
-					on_press: app.stop()
+					on_press: root.QuitWholeApp()
 
 <SetCustomerPopupBox>:
 	orientation: 'horizontal'
-	size_hint_y: 0.2
+	size_hint_y: 0.1
+	spacing: 5
 	Button:
 		id: CustomerPopupBox_btn1
 		text: 'Confirm'
