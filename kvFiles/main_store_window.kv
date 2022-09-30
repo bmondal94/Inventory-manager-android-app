@@ -1,6 +1,8 @@
 <MainStoreWindow>:
 	name: "all_items"
-	on_pre_enter: root.ItemBox()
+
+	on_pre_enter: root.InitializeScreen()
+
 	canvas.before:
 		Color:
 			rgba: 1,1,1,1
@@ -10,20 +12,8 @@
 	BoxLayout:
 		orientation:'vertical'
 		BoxLayout:
-			canvas.before:
-				Color:
-					rgba: 0,0,1,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
-			size_hint_y: 0.1
-			padding: [20,0,0,0]
-			Label:
-				text: 'Inventory Manager'
-				bold: True
-				size_hint_x: None
-				font_size: '25sp'
-				size: self.texture_size
+			size_hint_y: 0.08
+			id: heading
 		BoxLayout:
 			orientation:'vertical'
 			padding: 10
@@ -39,11 +29,32 @@
 							pos: self.pos
 							size: self.size
 					text: 'Main Store'
-					size_hint: (1, 0.1)
+					bold: True
+					font_size: '20sp'
+					size_hint: (1, 0.06)
+				BoxLayout:
+					orientation: 'horizontal'
+					id: search_item_id_box_id
+					padding: 5
+					size_hint_y: 0.06
+					canvas.before:
+						Color:
+							rgba: 0.1,0.4,0.5,0.8
+							#rgba: 0,0.5,1,0.5
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					Label:
+						text: 'Search:'
+						size_hint_x: 0.32
+					RelativeLayout:
+						id: search_item_id
 				ScrollView:
 					id: item_scroll
-					size_hint: (1, 0.75)
-					padding: [0, 0, 0, 3]
+					size_hint: (1, 0.78)
+					#bar_width: 10
+					#bar_inactive_color: 0,0,0,1
+					#scroll_type: ['bars']
 					canvas.before:
 						Color:
 							rgba: 0,0,0,1
@@ -51,23 +62,58 @@
 							pos: self.pos
 							size: self.size
 				BoxLayout:
-					orientation: 'horizontal'			
-					size_hint_y: 0.05
-					spacing: 5
-					Label:
-						canvas.before:
-							Color:
-								rgba: 0,0.5,1,0.5
-							RoundedRectangle:
-								pos: self.pos
-								size: self.size
-						text: 'Item:'
-					Button:
-						text: 'Add'
-						on_press: root.AddItemBtn()
-					Button:
-						text: 'Update'
-						on_press: root.DetailsUpdateScreen()
-					Button:
-						text: 'Delete'
-						on_press: root.DeleteItemScreen()
+					orientation: 'vertical'
+					size_hint_y: 0.1
+					spacing: 3
+					BoxLayout:
+						orientation: 'horizontal'			
+						#size_hint_y: 0.08
+						spacing: 5
+						Label:
+							canvas.before:
+								Color:
+									rgba: 0.1,0.4,0.5,1
+								RoundedRectangle:
+									pos: self.pos
+									size: self.size
+							text: 'Item:'
+						Button:
+							text: 'Add'
+							on_press: root.manager.current = 'new_item_add' #AddItemBtn()
+						Button:
+							text: 'Update'
+							on_press: root.DetailsUpdateScreen()
+						Button:
+							text: 'Delete'
+							on_press: root.DeleteItemScreen()
+						Button:
+							text: 'Summary'
+							on_press: root.ItemSummaryPage()
+
+					BoxLayout:
+						orientation: 'horizontal'			
+						#size_hint_y: 0.08
+						spacing: 5
+						Label:
+							canvas.before:
+								Color:
+									rgba: 0.1,0.4,0.5,1
+								RoundedRectangle:
+									pos: self.pos
+									size: self.size
+							text: 'Customer:'
+							size_hint_x: 0.25
+						Button:
+							text: 'Information'
+							on_press: root.CustomerInfoPage() 
+							size_hint_x: 0.35
+							disable: True
+						Button:
+							text: 'Checkout'
+							on_press: root.CustomerCheckOut() 
+							size_hint_x: 0.25
+							disable: True	
+						Button:
+							text: 'Quit'
+							size_hint_x: 0.15
+							on_press: root.QuitWholeApp() 

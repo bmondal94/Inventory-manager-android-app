@@ -1,0 +1,30 @@
+<Heading>:
+	canvas.before:
+		Color:
+			rgba: 0,0,1,0.6
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	padding: [20,0,20,0]
+	spacing: 10
+	orientation:'horizontal'
+	Button:
+		size_hint: (0.09, 0.6)
+		pos_hint: {'center_x':0.5, 'center_y':0.5}
+		background_normal: 'imgs/app/settings.png'
+		border: 0,0,0,0
+		on_release: app.open_settings()
+	BoxLayout:
+		size_hint_x:0.75
+		Label:
+			text: 'Inventory Manager'
+			bold: True
+			#size_hint_x: None
+			font_size: '25sp'
+			size: self.texture_size
+	Button:
+		background_normal: 'imgs/app/help.png'
+		border: 0,0,0,0
+		on_press: root.GoToHelp() 
+		size_hint: (0.09, 0.6)
+		pos_hint: {'center_x':0.5, 'center_y':0.5}

@@ -6,6 +6,9 @@
 	item_number: item_numbers
 	item_cost: item_cost
 	image: image_path
+
+	#on_pre_enter: root.ID_list()
+
 	canvas.before:
 		Color:
 			rgba: 1,1,1,1
@@ -15,20 +18,8 @@
 	BoxLayout:
 		orientation:'vertical'
 		BoxLayout:
-			canvas.before:
-				Color:
-					rgba: 0,0,1,1
-				Rectangle:
-					pos: self.pos
-					size: self.size
-			size_hint_y: 0.1
-			padding: [20,0,0,0]
-			Label:
-				text: 'Inventory Manager'
-				bold: True
-				size_hint_x: None
-				font_size: '25sp'
-				size: self.texture_size
+			id: heading
+			size_hint_y: 0.08
 
 		BoxLayout:	
 			orientation: 'vertical'
@@ -36,6 +27,7 @@
 			BoxLayout:
 				orientation: 'vertical'
 				spacing: 5
+					
 				Label:
 					canvas.before:
 						Color:
@@ -44,11 +36,14 @@
 							pos: self.pos
 							size: self.size
 					text: 'Add new items'
-					size_hint_y: 0.5
+					bold: True
+					font_size: '20sp'
+					size_hint_y: 0.06
 				BoxLayout:
 					orientation:'vertical'
 					padding: 5
-					size_hint_y: 1.5
+					size_hint_y: 0.3
+					spacing: 5
 					canvas.before:
 						Color:
 							rgba: 0.1,0.4,0.5,0.8
@@ -57,36 +52,48 @@
 							size: self.size
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing: 10
 						Label:
-							text: 'Item name*'
+							text: 'Name*'
+							size_hint_x: 0.4
 		
 						TextInput:
 							id: item_name
 							cursor_color: 0,0,0,1
 							text: 'test'
+							hint_text: 'item name'
 							on_text: root.CheckLength_name()
 							#multiline: False
 		
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing: 10
 						Label:
-							text: 'Item ID*'
+							text: 'ID*'
+							size_hint_x: 0.4
 		
 						BoxLayout:
 							orientation: 'horizontal'
+							spacing:2
 							TextInput:
 								id: item_id
 								cursor_color: 0,0,0,1
 								text: '1'
+								hint_text: 'unique item id'
 								on_text: root.CheckLength_id()
 							Button:
-								text: 'Generate'
+								#text: 'Generate'
+								background_normal: 'imgs/app/random2.jpg'
+								border: 0,0,0,0
+								size_hint_x: 0.2
 								on_press: root.GenerateRandomId()
 		
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing:10
 						Label:
-							text: 'Item counts'
+							text: 'Stock'
+							size_hint_x: 0.4
 		
 						TextInput:
 							id: item_numbers
@@ -95,8 +102,10 @@
 		
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing: 10
 						Label:
-							text: 'Item cost (/per item)'
+							text: 'Price (/item)'
+							size_hint_x: 0.4
 		
 						TextInput:
 							id: item_cost
@@ -105,28 +114,62 @@
 		
 					BoxLayout:
 						orientation: 'horizontal'
+						spacing: 10
 						Label:
 							text: 'Image'
+							size_hint_x: 0.4
 						BoxLayout:
 							orientation: 'horizontal'
+							spacing:2
 							TextInput:
 								id: image_path
 								cursor_color: 0,0,0,1
-								text: 'imgs/test.jpg'
+								text: 
+								hint_text: 'image path. default is imgs/test.jpg'
+								on_focus: lets_choose_file.source = image_path.text.strip()
+							Button:
+								id: filechoose_picture
+								background_normal: 'imgs/app/folder.jpg'
+								border: 0,0,0,0
+								#text: 'Camera'	
+								size_hint_x: 0.2
+								on_press: root.FileChooserClick()
 							Button:
 								id: camera_take_picture
-								text: 'Camera'	
+								background_normal: 'imgs/app/camera.jpg'
+								border: 0,0,0,0
+								#text: 'Camera'	
+								size_hint_x: 0.2
 								on_press: root.CameraClick()
-				Label:
-					canvas.before:
-						Color:
-							rgba: 0.1,0.4,0.5,1
-						RoundedRectangle:
-							pos: self.pos
-							size: self.size
-					text: ' - "*" is mandatory. \n- The default item number is 0. \n- The default item cost is 0. \n- The default image path is test.jpg .\n- Multiple item can be added.'
-					#size_hint: None, None
-					size: self.texture_size
+				BoxLayout:
+					orientation: 'horizontal'
+					size_hint_y: 0.2
+					spacing: 10	
+					Label:
+						canvas.before:
+							Color:
+								rgba: 0.1,0.4,0.5,1
+							RoundedRectangle:
+								pos: self.pos
+								size: self.size
+						text: ' -  "*" is mandatory. \n- Default stock is 0. \n- Default price is 0. \n- Default image is test.jpg .\n- Multiple item can be added.\n- Camera can be used multiple times.\n- Manualy delete unnecessary images.'
+						#size_hint: None, None
+						size_hint_x: 0.67
+						size: self.texture_size
+					BoxLayout:
+						size_hint_x: 0.33
+						padding: 2
+						canvas.before:
+							Color:
+								rgba: 0.1,0.4,0.5,1
+							Line:
+								width: 1.5
+								rounded_rectangle: self.x, self.y, self.width, self.height, 10
+						Image:
+							id: lets_choose_file
+							source: 
+							allow_stretch: True
+							size: self.texture_size
 		
 				BoxLayout:
 					orientation: 'vertical'
@@ -137,24 +180,31 @@
 							pos: self.pos
 							size: self.size
 					padding: [5, 5]
+					size_hint_y: 0.34
+					spacing: 10
 					Label:
 						text: 'Items added: '
 						size_hint: (None, None)
 						size: self.texture_size
 					ScrollView:
+						canvas.before:
+							Color:
+								rgba: 0,0,0,0.2
+							Line:
+								width: 1.2
+								rounded_rectangle: self.x, self.y, self.width, self.height, 10
 						id: add_item_label
 						BoxLayout:
 							id: add_item_label_box
 							orientation: 'vertical'
 							size_hint_y: None
 							height: self.minimum_height
-							padding: [3, 3]
+							spacing: 5
 		
 				BoxLayout:
 					orientation: 'vertical'
 					spacing: 3
-					#padding: [0,3,0,0]
-					size_hint_y: 0.6
+					size_hint_y: 0.1
 					Button:
 						text: 'Add to bucket'
 						size_hint_y: 0.025
@@ -169,13 +219,34 @@
 							on_release: 
 								root.Submit()
 						Button:
-							text: 'Quit'
+							text: 'Home'
 							on_release:
 								root.manager.transition.direction = "left"
 								root.ReturnBack()
 	
-<AddItemWidgetLabel>:
-	id: add_item_widget_label
-	size_hint: (None, None)
-	size: self.texture_size
+						Button:
+							text: 'Quit'
+							on_press: root.QuitWholeApp()
+<AddItemWidgetLabelV2>:
+	orientation: 'horizontal'
+	size_hint_y: None
+	height: self.minimum_height 
+	spacing: 10
+	Label:
+		canvas.before:
+			Color:
+				rgba: 0.1,0.4,0.5,0.8
+			RoundedRectangle:
+				pos: self.pos
+				size: self.size
+		id: add_item_widget_label
+		size_hint: (0.9, None)
+		size: self.texture_size
+	Button:
+		size_hint_x: 0.06
+		background_normal: 'imgs/app/delete.jpg'
+		border: 0,0,0,0
+		size: self.texture_size
+		
+		on_press: root.CheckoutDeleteItemFromList()
 

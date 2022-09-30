@@ -1,0 +1,11 @@
+python main.py -m screen:phone_oneplus_6t,portrait,scale=0.5
+python main.py -m screen
+
+buildozer init
+buildozer -v android debug
+buildozer android deploy run logcat
+
+buildozer -v android debug deploy run logcat
+
+buildozer setdefault android debug deploy run logcat
+buildozer

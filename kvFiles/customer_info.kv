@@ -1,0 +1,173 @@
+<CustomerInfoScreen>:
+	name: 'customer_info'
+	on_pre_enter: root.InitializeScreen()
+	canvas.before:
+		Color:
+			rgba: 1,1,1,1
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	BoxLayout:
+		orientation: 'vertical'
+		BoxLayout:
+			size_hint_y: 0.08
+			id: heading
+		BoxLayout:
+			orientation: 'vertical'
+			spacing: 5
+			padding: 10
+			Label:
+				canvas.before:
+					Color:
+						rgba: 0,0.5,1,1
+					RoundedRectangle:
+						pos: self.pos
+						size: self.size
+				size_hint_y: 0.06
+				text: 'Customer info'
+				bold: True
+				font_size: '20sp'
+			BoxLayout:
+				orientation: 'horizontal'
+				padding: 10
+				size_hint_y: 0.08
+				canvas.before:
+					Color:
+						rgba: 0.1,0.4,0.5,1
+					RoundedRectangle:
+						pos: self.pos
+						size: self.size
+				Label:
+					text: 'Id'
+					size_hint_x: 0.2
+				RelativeLayout:
+					id: customer_id
+					size_hint_x: 0.7
+				Button:
+					size_hint_x: 0.1
+					pos_hint: {'center_x':0.2, 'center_y':0.5}
+					size_hint_y: 0.9
+					background_normal: 'imgs/app/random2.jpg'
+					border: 0,0,0,0
+					on_press: root.GenerateRandomId()
+			BoxLayout:
+				orientation: 'vertical'
+				padding: 10
+				size_hint_y: 0.26
+				spacing: 5
+				canvas.before:
+					Color:
+						rgba: 0.1,0.4,0.5,1
+					RoundedRectangle:
+						pos: self.pos
+						size: self.size
+				BoxLayout:
+					orientation: 'horizontal'
+					Label:
+						text: 'Name*'
+						size_hint_x: 0.3
+					TextInput:
+						id: customer_name
+						cursor_color: 0,0,0,1
+						hint_text: 'customer name.\nNot mandatory during checkout.'
+						on_text: root.CheckLength_name()
+				BoxLayout:
+					orientation: 'horizontal'
+					Label:
+						text: 'Contact'
+						size_hint_x: 0.3
+					TextInput:
+						id: customer_contact
+						cursor_color: 0,0,0,1
+						hint_text: 'customer email etc.'
+						on_text: root.CheckLength_contact()
+				BoxLayout:
+					orientation: 'horizontal'
+					Label:
+						text: 'Comment'
+						size_hint_x: 0.3
+					TextInput:
+						id: customer_comment
+						cursor_color: 0,0,0,1
+						hint_text: 'comment, previous debt etc.'
+						on_text: root.CheckLength_contact()
+			BoxLayout:
+				size_hint_y: 0.5
+				orientation: 'vertical'
+				canvas.before:
+					Color:
+						rgba: 0.1,0.4,0.5,1
+					RoundedRectangle:
+						pos: self.pos
+						size: self.size
+				padding: [15, 5, 15, 15]
+				id: checkout_item_box
+				spacing: 10
+				Label:
+					text: 'Checkout item list'
+					size_hint_y: None
+					size: self.texture_size
+					#font_size: '15sp'
+					underline: True
+				ScrollView:
+					canvas.before:
+						Color:
+							rgba: 0.4,0.7,0.5,1
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+					Label:
+						id: checkout_item_box_viewport
+						text: '***** This will show the checkout items list during checkout. *****'
+						multiline: True
+						size_hint_y: None
+						text_size: self.width, None
+						height: self.texture_size[1]
+			BoxLayout:
+				orientation: 'horizontal'
+				size_hint_y: 0.05
+				spacing: 5
+				Button:
+					text: 'Add'
+					on_press: root.Submit()
+				Button:
+					text: 'Update'
+					on_press: root.UpdateCustomer()
+				Button:
+					text: 'Delete'
+					on_press: root.DeleteCustomer()
+				Button:
+					text: 'Refresh'
+					on_press: root.CleanFields()
+				
+			BoxLayout:
+				orientation: 'horizontal'
+				spacing: 3
+				size_hint_y: 0.05
+				Button:
+					id: checkout_button
+					text: 'Checkout'
+					on_press: root.CheckOut()
+				Button:
+					id: checkout_back_button
+					text: 'Back'
+					on_press: root.BackToCheckoutItem()
+				Button:
+					text: 'Home'
+					on_press: root.ReturnBack()
+				Button:
+					text: 'Quit'
+					on_press: root.QuitWholeApp()
+
+<SetCustomerPopupBox>:
+	orientation: 'horizontal'
+	size_hint_y: 0.1
+	spacing: 5
+	Button:
+		id: CustomerPopupBox_btn1
+		text: 'Confirm'
+	Button:
+		id: CustomerPopupBox_btn2
+		text: 'Cancel'
+		
+		

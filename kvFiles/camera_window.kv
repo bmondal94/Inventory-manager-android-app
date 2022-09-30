@@ -1,18 +1,41 @@
 <TakePicture>:
 	name: 'take_picture'
+	canvas.before:
+		Color:
+			rgba: 1,1,1,1
+		Rectangle:
+			pos: self.pos
+			size: self.size
 	BoxLayout:
 		orientation: 'vertical'
+		spacing: 5
+		padding: 10
 		Camera:
 			id: camera_img
-			resolution: (640, 480)
+			resolution: (640, 480) 
 			play: False
-		ToggleButton:
-			text: 'play'
-			on_press: camera_img.play = not camera_img.play
-			size_hint_y: 0.1 
+			allow_stretch: True
+			keep_ratio: True
+		#BoxLayout:
+		#	size_hint_y: 0.05
+		#	padding: 10
+		#	Label:
+		#		text: "- Use 'capture' or 'play' button to capture the image."
+		#		size_hint: (None, None)
 		BoxLayout:
 			orientation: 'horizontal'
-			size_hint_y: 0.1 
+			size_hint_y: 0.08
+			spacing: 10
+			ToggleButton:
+				text: 'play'
+				on_press: camera_img.play = not camera_img.play
+			ToggleButton:
+				text: 'switch'
+				on_press: camera_img.keep_ratio = not camera_img.keep_ratio
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.08
+			spacing: 5
 			Button:
 				text: 'Capture'
 				on_press: camera_img.play = False
@@ -20,6 +43,9 @@
 				text: 'Save'
 				on_press: root.SaveImage()
 			Button:
-				text: 'Quit'
+				text: 'Back'
 				on_press: root.ReturnBack()
+			Button:
+				text: 'Quit'
+				on_press: root.QuitWholeApp()
 			
